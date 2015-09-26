@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<html>
+    <head>
+        <title>ROLES</title>
+    </head>
+    <body>
+        <meta>
+            <version>1</version>
+        </meta>
+        <role>
+            <name>Logistics Officer</name>
+            <permission>
+                <form>Timesheet Form</form>
+                <form>Warehouse Form</form>
+            </permission>
+        </role>
+        <role>
+            <name>Finance Officer</name>
+            <permission>
+                <form>Timesheet Form</form>
+                <form>Payment Form</form>
+            </permission>
+        </role>
+    </body>
+</html>

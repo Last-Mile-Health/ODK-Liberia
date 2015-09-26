@@ -1,0 +1,87 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion "21.1.2"
+
+    defaultConfig {
+        applicationId "org.lastmilehealth.collect.android"
+        minSdkVersion 9
+        targetSdkVersion 21
+        versionCode 1
+        versionName "1.0.3"
+    }
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/DEPENDENCIES'
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+    }
+    signingConfigs {
+        release {
+            storeFile file("../debug.jks")
+            storePassword "q1w2e3r4"
+            keyAlias "alias"
+            keyPassword "q1w2e3r4"
+        }
+        debug {
+            storeFile file("../debug.jks")
+            storePassword "q1w2e3r4"
+            keyAlias "alias"
+            keyPassword "q1w2e3r4"
+        }
+    }
+    buildTypes {
+        release {
+            //LastMileHealth-release.apk
+            minifyEnabled false
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            applicationVariants.all { variant ->
+                variant.outputs.each { output ->
+                    output.outputFile = new File(
+                            output.outputFile.parent,
+                            "LastMileHealth.apk")
+                }
+            }
+        }
+//        debug {
+//            signingConfig signingConfigs.debug
+//            applicationVariants.debug { variant ->
+//                variant.outputs.all{ output ->
+//                    output.outputFile = new File(
+//                            output.outputFile.parent,
+//                            "LastMileHealth-de.apk")
+//                }
+//            }
+//        }
+    }
+
+}
+
+dependencies {
+    compile 'org.apache.james:apache-mime4j:0.6.1'
+    compile 'commons-io:commons-io:2.4'
+    compile 'com.google.api-client:google-api-client:1.15.0-rc'
+    compile files('libs/google-api-client-android-1.17.0-rc.jar')
+    compile files('libs/google-api-services-drive-v2-rev113-1.17.0-rc.jar')
+    compile 'com.google.http-client:google-http-client:1.15.0-rc'
+    compile 'com.google.http-client:google-http-client-android:1.15.0-rc'
+    compile 'com.google.http-client:google-http-client-gson:1.15.0-rc'
+    compile 'com.google.oauth-client:google-oauth-client:1.15.0-rc'
+    compile 'com.google.code.gson:gson:2.1'
+    compile files('libs/httpclientandroidlib-4.2.1.jar')
+    compile 'org.apache.httpcomponents:httpmime:4.4'
+    compile files('libs/javarosa-libraries-2015-01-10.jar')
+    compile 'joda-time:joda-time:2.0'
+    compile 'net.sf.kxml:kxml2:2.3.0'
+    compile 'net.sf.opencsv:opencsv:2.3'
+    compile 'com.google.android.gms:play-services:6.5.87'
+    compile 'com.github.snowdream.android.util:log:1.2.0'
+}

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2009 University of Washington Licensed under the Apache
+	License, Version 2.0 (the "License"); you may not use this file except in
+	compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+	Unless required by applicable law or agreed to in writing, software distributed
+	under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+	OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+	the specific language governing permissions and limitations under the License. -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- strings that should not be translated -->
+	<string translatable="false" name="app_name">Liberia ODK</string>
+	<string translatable="false" name="protocol_odk_default">odk_default</string>
+	<string translatable="false" name="protocol_google_maps_engine">google_maps_engine</string>
+    <string translatable="false" name="default_form_processing_logic">-1</string>
+    <string translatable="false" name="protocol_other">other_protocol</string>
+	<string translatable="false" name="default_server_url">https://opendatakit.appspot.com</string>
+	<string translatable="false" name="default_odk_formlist">/formList</string>
+	<string translatable="false" name="default_odk_submission">/submission</string>
+    <item name="mapview" type="id"/>
+    <string name="receive_forms_updates">Receive Forms / Updates</string>
+    <string name="title_paired_devices">Paired Devices</string>
+    <string name="title_available_devices">Available Devices</string>
+    <string name="button_scan">Scan for devices</string>
+    <string name="scanning">&#160;Scanning for devices...</string>
+    <string name="select_device">Select a device to connect</string>
+    <string name="none_paired">No devices have been paired</string>
+    <string name="none_found">No devices found</string>
+    <string name="no_device_selected">Device is not selected</string>
+    <string name="no_device_connected">Device is not connected</string>
+    <string name="no_bt_enabled">Bluetooth is not enabled</string>
+    <string name="no_update">Update canceled</string>
+    <string name="no_bt_available">Bluetooth is not available</string>
+    <string name="no_discoverable">Device is not discoverable</string>
+    <string name="send_update">Send Update</string>
+    <string name="send_completed_forms">Send Completed Forms</string>
+    <string name="already_ready">Already ready for update</string>
+    <string name="data_transfer_title">Data transferring</string>
+    <string name="data_transfer_button">Cancel</string>
+    <string name="data_transfer_ok">Ok</string>
+    <string name="connection_started">Establishing connection...</string>
+    <string name="connection_timeout">Could not establish connection. Please pair devices before files sending and try again.</string>
+    <string name="connection_connected">Connection established. Start data transfer.</string>
+    <string name="connection_success">Data transferred successfully.</string>
+    <string name="data_transfer_failed">Could not transfer data. Please try again.</string>
+    <string name="no_forms">No forms to send</string>
+    <string name="no_instances">No instances to send</string>
+</resources>
