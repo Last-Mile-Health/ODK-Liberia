@@ -14,17 +14,10 @@
 
 package org.lastmilehealth.collect.android.tasks;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import android.content.Intent;
+import android.database.Cursor;
+import android.os.AsyncTask;
+import android.util.Log;
 
 import org.apache.commons.io.IOUtils;
 import org.javarosa.core.model.FormDef;
@@ -60,10 +53,18 @@ import org.lastmilehealth.collect.android.preferences.AdminPreferencesActivity;
 import org.lastmilehealth.collect.android.utilities.FileUtils;
 import org.lastmilehealth.collect.android.utilities.ZipUtils;
 
-import android.content.Intent;
-import android.database.Cursor;
-import android.os.AsyncTask;
-import android.util.Log;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import au.com.bytecode.opencsv.CSVReader;
 
 /**
@@ -124,6 +125,10 @@ public class FormLoaderTask extends AsyncTask<String, String, FormLoaderTask.FEC
    */
   @Override
   protected FECWrapper doInBackground(String... path) {
+    return loadForm(path);
+  }
+
+  public FECWrapper loadForm(String... path) {
     FormEntryController fec = null;
     FormDef fd = null;
     FileInputStream fis = null;

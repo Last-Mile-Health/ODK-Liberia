@@ -14,44 +14,6 @@
 
 package org.lastmilehealth.collect.android.activities;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-
-import org.javarosa.core.model.FormIndex;
-import org.javarosa.core.model.data.IAnswerData;
-import org.javarosa.core.model.instance.TreeElement;
-import org.javarosa.form.api.FormEntryCaption;
-import org.javarosa.form.api.FormEntryController;
-import org.javarosa.form.api.FormEntryPrompt;
-import org.lastmilehealth.collect.android.R;
-import org.lastmilehealth.collect.android.application.Collect;
-import org.lastmilehealth.collect.android.exception.JavaRosaException;
-import org.lastmilehealth.collect.android.listeners.AdvanceToNextListener;
-import org.lastmilehealth.collect.android.listeners.FormLoaderListener;
-import org.lastmilehealth.collect.android.listeners.FormSavedListener;
-import org.lastmilehealth.collect.android.listeners.SavePointListener;
-import org.lastmilehealth.collect.android.logic.FormController;
-import org.lastmilehealth.collect.android.logic.FormController.FailedConstraint;
-import org.lastmilehealth.collect.android.preferences.AdminPreferencesActivity;
-import org.lastmilehealth.collect.android.preferences.PreferencesActivity;
-import org.lastmilehealth.collect.android.provider.FormsProviderAPI.FormsColumns;
-import org.lastmilehealth.collect.android.provider.InstanceProviderAPI;
-import org.lastmilehealth.collect.android.provider.InstanceProviderAPI.InstanceColumns;
-import org.lastmilehealth.collect.android.tasks.FormLoaderTask;
-import org.lastmilehealth.collect.android.tasks.SavePointTask;
-import org.lastmilehealth.collect.android.tasks.SaveResult;
-import org.lastmilehealth.collect.android.tasks.SaveToDiskTask;
-import org.lastmilehealth.collect.android.utilities.CompatibilityUtils;
-import org.lastmilehealth.collect.android.utilities.FileUtils;
-import org.lastmilehealth.collect.android.utilities.MediaUtils;
-import org.lastmilehealth.collect.android.views.ODKView;
-import org.lastmilehealth.collect.android.widgets.QuestionWidget;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -100,6 +62,44 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.javarosa.core.model.FormIndex;
+import org.javarosa.core.model.data.IAnswerData;
+import org.javarosa.core.model.instance.TreeElement;
+import org.javarosa.form.api.FormEntryCaption;
+import org.javarosa.form.api.FormEntryController;
+import org.javarosa.form.api.FormEntryPrompt;
+import org.lastmilehealth.collect.android.R;
+import org.lastmilehealth.collect.android.application.Collect;
+import org.lastmilehealth.collect.android.exception.JavaRosaException;
+import org.lastmilehealth.collect.android.listeners.AdvanceToNextListener;
+import org.lastmilehealth.collect.android.listeners.FormLoaderListener;
+import org.lastmilehealth.collect.android.listeners.FormSavedListener;
+import org.lastmilehealth.collect.android.listeners.SavePointListener;
+import org.lastmilehealth.collect.android.logic.FormController;
+import org.lastmilehealth.collect.android.logic.FormController.FailedConstraint;
+import org.lastmilehealth.collect.android.preferences.AdminPreferencesActivity;
+import org.lastmilehealth.collect.android.preferences.PreferencesActivity;
+import org.lastmilehealth.collect.android.provider.FormsProviderAPI.FormsColumns;
+import org.lastmilehealth.collect.android.provider.InstanceProviderAPI;
+import org.lastmilehealth.collect.android.provider.InstanceProviderAPI.InstanceColumns;
+import org.lastmilehealth.collect.android.tasks.FormLoaderTask;
+import org.lastmilehealth.collect.android.tasks.SavePointTask;
+import org.lastmilehealth.collect.android.tasks.SaveResult;
+import org.lastmilehealth.collect.android.tasks.SaveToDiskTask;
+import org.lastmilehealth.collect.android.utilities.CompatibilityUtils;
+import org.lastmilehealth.collect.android.utilities.FileUtils;
+import org.lastmilehealth.collect.android.utilities.MediaUtils;
+import org.lastmilehealth.collect.android.views.ODKView;
+import org.lastmilehealth.collect.android.widgets.QuestionWidget;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * FormEntryActivity is responsible for displaying questions, animating
@@ -241,8 +241,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 		mCurrentView = null;
 		mInAnimation = null;
 		mOutAnimation = null;
-		mGestureDetector = new GestureDetector(this, this);
-		mQuestionHolder = (LinearLayout) findViewById(R.id.questionholder);
+		mGestureDetector = new GestureDetector(this, this);		mQuestionHolder = (LinearLayout) findViewById(R.id.questionholder);
 
 		// get admin preference settings
 		mAdminPreferences = getSharedPreferences(

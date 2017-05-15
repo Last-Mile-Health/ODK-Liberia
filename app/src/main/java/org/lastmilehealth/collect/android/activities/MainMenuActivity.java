@@ -100,6 +100,7 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
     private Button mEnterDataButton;
     private Button mManageFilesButton;
     private Button mReviewDataButton;
+    private Button mViewCasesButton;
 
 
     private AlertDialog mAlertDialog;
@@ -208,6 +209,19 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
                         .logAction(this, "editSavedForm", "click");
                 Intent i = new Intent(getApplicationContext(),
                         InstanceChooserList.class);
+                startActivity(i);
+            }
+        });
+
+        mViewCasesButton = (Button) findViewById(R.id.view_cases);
+
+        mViewCasesButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Collect.getInstance().getActivityLogger()
+                       .logAction(this, "viewCases", "click");
+                Intent i = new Intent(getApplicationContext(),
+                                      CaseTypesActivity.class);
                 startActivity(i);
             }
         });

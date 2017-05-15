@@ -7,7 +7,6 @@ import org.lastmilehealth.collect.android.application.Collect;
 import org.lastmilehealth.collect.android.utilities.Roles;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,7 +14,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,7 +51,7 @@ public class XMLParser {
     public void parseXML() {
         List<Roles> rolesList = new ArrayList<>();
         try {
-            XmlPullParser parser = getXMLFile();
+            XmlPullParser parser = XmlParserUtils.getXMLFile(Collect.ROLES_PATH);
             mPermissions = new ArrayList<>();
             mNames = new ArrayList<>();
 
@@ -116,24 +114,6 @@ public class XMLParser {
             mNames.add(name);
         }
     }
-
-    public XmlPullParser getXMLFile() throws XmlPullParserException, FileNotFoundException {
-
-        XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-        factory.setNamespaceAware(true);
-        XmlPullParser xpp = factory.newPullParser();
-        // get a reference to the file.
-        File file = new File(Collect.ROLES_PATH);
-
-        // create an input stream to be read by the stream reader.
-        FileInputStream fis = new FileInputStream(file);
-
-        // set the input for the parser using an InputStreamReader
-        xpp.setInput(new InputStreamReader(fis));
-
-        return xpp;
-    }
-
 
     private void moveFile() {
 

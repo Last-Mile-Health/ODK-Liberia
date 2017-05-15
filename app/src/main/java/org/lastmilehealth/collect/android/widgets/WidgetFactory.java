@@ -14,13 +14,13 @@
 
 package org.lastmilehealth.collect.android.widgets;
 
-import java.util.Locale;
+import android.content.Context;
+import android.util.Log;
 
 import org.javarosa.core.model.Constants;
 import org.javarosa.form.api.FormEntryPrompt;
 
-import android.content.Context;
-import android.util.Log;
+import java.util.Locale;
 
 /**
  * Convenience class that handles creation of widgets.

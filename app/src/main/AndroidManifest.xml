@@ -135,6 +135,12 @@
             </intent-filter>
         </activity>
         <activity
+            android:name="org.lastmilehealth.collect.android.activities.CaseTypesActivity"
+            android:label="@string/app_name"/>
+        <activity
+            android:name="org.lastmilehealth.collect.android.activities.CaseListActivity"
+            android:label="@string/app_name"/>
+        <activity
             android:name="org.lastmilehealth.collect.android.activities.FormManagerList"
             android:label="@string/app_name" />
         <activity
