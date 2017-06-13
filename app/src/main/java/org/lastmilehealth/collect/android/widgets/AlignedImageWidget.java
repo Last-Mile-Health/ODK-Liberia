@@ -134,7 +134,7 @@ public class AlignedImageWidget extends QuestionWidget implements IBinaryWidget 
                 i.putExtra(DIMENSIONS_EXTRA, iArray);
                 i.putExtra(RETAKE_OPTION_EXTRA, false);
 
-                // We give the camera an absolute filename/path where to put the
+                // We give the camera an absolute filename/path where to putByName the
                 // picture because of bug:
                 // http://code.google.com/p/android/issues/detail?id=1480
                 // The bug appears to be fixed in Android 2.0+, but as of feb 2,

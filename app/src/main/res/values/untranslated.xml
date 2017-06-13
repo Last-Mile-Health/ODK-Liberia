@@ -44,4 +44,5 @@
     <string name="data_transfer_failed">Could not transfer data. Please try again.</string>
     <string name="no_forms">No forms to send</string>
     <string name="no_instances">No instances to send</string>
+    <string name="summary_statistics_screen_title">Summary Statistics</string>
 </resources>

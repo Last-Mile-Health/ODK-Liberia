@@ -89,7 +89,7 @@ public class FormChooserList extends ListActivity implements DiskSyncListener {
         }
 
         // DiskSyncTask checks the disk for any forms not already in the content provider
-        // that is, put here by dragging and dropping onto the SDCard
+        // that is, putByName here by dragging and dropping onto the SDCard
         mDiskSyncTask = (DiskSyncTask) getLastNonConfigurationInstance();
         if (mDiskSyncTask == null) {
             Log.i(t, "Starting new disk sync task");

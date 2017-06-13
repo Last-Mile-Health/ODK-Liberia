@@ -37,8 +37,13 @@ public class DefaultCaseManagerLoadingTask extends BaseLoadingTask implements Ca
         try {
             XmlCaseParser parser = new XmlCaseParser();
             cases = parser.parse();
-            success = true;
-            executionState = CaseManager.State.LOADED;
+            if (canceled) {
+                cases = null;
+                executionState = CaseManager.State.FAILED;
+            } else {
+                success = true;
+                executionState = CaseManager.State.LOADED;
+            }
         } catch (Exception e) {
             error = e;
             executionState = CaseManager.State.FAILED;

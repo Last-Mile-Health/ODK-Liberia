@@ -98,7 +98,7 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
             			"click", mPrompt.getIndex());
                 mErrorTextView.setVisibility(View.GONE);
                 Intent i = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-                // We give the camera an absolute filename/path where to put the
+                // We give the camera an absolute filename/path where to putByName the
                 // picture because of bug:
                 // http://code.google.com/p/android/issues/detail?id=1480
                 // The bug appears to be fixed in Android 2.0+, but as of feb 2,

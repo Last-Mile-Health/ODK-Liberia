@@ -825,7 +825,7 @@ public abstract class GoogleMapsEngineAbstractUploader<Params, Progress, Result>
 			throws XmlPullParserException, IOException, FormException {
 		ArrayList<String> path = new ArrayList<String>();
 
-		// we put path names in here as we go, and if we hit a duplicate we
+		// we putByName path names in here as we go, and if we hit a duplicate we
 		// blow up
 		ArrayList<String> repeatCheck = new ArrayList<String>();
 		boolean getPaths = false;
@@ -903,7 +903,7 @@ public abstract class GoogleMapsEngineAbstractUploader<Params, Progress, Result>
 			throws XmlPullParserException, IOException, FormException {
 		ArrayList<String> path = new ArrayList<String>();
 
-		// we put path names in here as we go, and if we hit a duplicate we
+		// we putByName path names in here as we go, and if we hit a duplicate we
 		// blow up
 		ArrayList<String> repeatCheck = new ArrayList<String>();
 		int event = parser.next();

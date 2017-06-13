@@ -3,7 +3,17 @@ package org.lastmilehealth.collect.android.parser;
 import android.text.TextUtils;
 
 import org.lastmilehealth.collect.android.application.Collect;
+import org.lastmilehealth.collect.android.cases.CaseElement;
+import org.lastmilehealth.collect.android.cases.CaseTextElement;
 import org.lastmilehealth.collect.android.cases.CaseType;
+import org.lastmilehealth.collect.android.cases.impl.BasicCaseElement;
+import org.lastmilehealth.collect.android.cases.impl.CaseElementButton;
+import org.lastmilehealth.collect.android.cases.impl.CaseElementDisplay;
+import org.lastmilehealth.collect.android.cases.impl.CaseElementGroup;
+import org.lastmilehealth.collect.android.cases.impl.CaseElementRoot;
+import org.lastmilehealth.collect.android.cases.impl.CaseElementSpecial;
+import org.lastmilehealth.collect.android.cases.impl.CaseElementStringText;
+import org.lastmilehealth.collect.android.cases.impl.CaseElementVariableText;
 import org.lastmilehealth.collect.android.cases.impl.CaseTypeImpl;
 import org.xmlpull.v1.XmlPullParser;
 
@@ -26,15 +36,29 @@ public class XmlCaseParser {
     public static final String TAG_ELEMENT = "caseElement";
     public static final String TAG_ELEMENT_TYPE = "elementType";
     public static final String TAG_ELEMENT_FORM = "elementForm";
-    public static final String TAG_ELEMENT_DATA = "elementData";
+    public static final String TAG_ELEMENT_DATA = "datum";
+    public static final String TAG_ELEMENT_DATA_GROUP = "elementData";
     public static final String TAG_ELEMENT_GROUP = "caseElementGroup";
     public static final String TAG_ELEMENT_GROUP_FORM = "caseElementGroupForm";
     public static final String TAG_CASE_TYPE = "case";
+    public static final String ATTR_CASE_ELEMENT_DATA_STYLE = "style";
+
+    public static final String ELEMENT_TYPE_DISPLAY = "Display";
+    public static final String ELEMENT_TYPE_BUTTON = "Button";
+    public static final String ELEMENT_TYPE_SPECIAL = "Special";
+
     private boolean insideCaseType = false;
     private CaseTypeImpl parsedCaseType;
     private List<CaseType> caseTypes;
     private String text;
     private List<String> secondaryForms = null;
+    private boolean inElementList = false;
+    private boolean inElementDataGroup = false;
+    private CaseElementGroup caseElementRoot;
+    private CaseElementGroup currentGroup;
+    private ElementHolder currentElement;
+    private String style;
+
 
     public XmlCaseParser() {
     }
@@ -69,11 +93,17 @@ public class XmlCaseParser {
 
             parser.next();
         }
+        parsedCaseType = null;
+        secondaryForms = null;
+        caseElementRoot = null;
+        currentGroup = null;
+        currentElement = null;
         return caseTypes;
     }
 
     private void handleStartTag(XmlPullParser parser) {
         text = null;
+        style = null;
         if (!insideCaseType) {
             // if we are not in case type than we need to wait for a case tag in order to start parsing a case
             if (parser.getName().equals(TAG_CASE_TYPE)) {
@@ -87,6 +117,36 @@ public class XmlCaseParser {
                 case TAG_SECONDARY_FORMS:
                     secondaryForms = new ArrayList<>();
                     break;
+
+                case TAG_ELEMENT_LIST:
+                    caseElementRoot = new CaseElementRoot();
+                    currentGroup = caseElementRoot;
+                    break;
+
+                case TAG_ELEMENT_GROUP:
+                    CaseElementGroup group = new CaseElementGroup(currentGroup);
+                    currentGroup.getCaseElements().add(group);
+                    currentGroup = group;
+                    break;
+
+                case TAG_ELEMENT:
+                    currentElement = new ElementHolder();
+                    break;
+
+                case TAG_ELEMENT_DATA_GROUP:
+                    inElementDataGroup = true;
+                    break;
+
+                case TAG_ELEMENT_DATA:
+                    int count = parser.getAttributeCount();
+                    for (int i = 0; i < count; i++) {
+                        if (ATTR_CASE_ELEMENT_DATA_STYLE.equalsIgnoreCase(parser.getAttributeName(i))) {
+                            style = parser.getAttributeValue(i);
+                            break;
+                        }
+                    }
+                    break;
+
             }
         }
     }
@@ -129,6 +189,74 @@ public class XmlCaseParser {
                 }
                 break;
 
+            case TAG_ELEMENT_LIST:
+                parsedCaseType.setCaseElement(caseElementRoot);
+                break;
+
+            case TAG_ELEMENT_GROUP:
+                currentGroup = currentGroup.getParent();
+                break;
+
+            case TAG_ELEMENT_GROUP_FORM:
+                currentGroup.setCaseElementsGroupForm(text);
+                break;
+
+            case TAG_ELEMENT_TYPE:
+                if (currentElement != null) {
+                    currentElement.type = text;
+                }
+                break;
+
+            case TAG_ELEMENT_FORM:
+                if (currentElement != null) {
+                    currentElement.formName = text;
+                }
+                break;
+
+            case TAG_ELEMENT_DATA:
+                if (inElementDataGroup && !TextUtils.isEmpty(text)) {
+                    if (text.startsWith("\"") && text.endsWith("\"")) {
+                        // This by specs is plain text
+                        CaseElementStringText elementText = new CaseElementStringText(text.substring(1, text.length() - 1), style);
+                        currentElement.text.add(elementText);
+                    } else {
+                        CaseElementVariableText elementText = new CaseElementVariableText(text, style);
+                        currentElement.text.add(elementText);
+                    }
+                }
+                break;
+
+            case TAG_ELEMENT_DATA_GROUP:
+                inElementDataGroup = false;
+                currentGroup.getCaseElements().add(currentElement.createElement());
+                break;
+
+        }
+    }
+
+    private class ElementHolder {
+        private String type;
+        private String formName;
+        private final List<CaseTextElement> text = new ArrayList<>();
+
+        private CaseElement createElement() {
+            BasicCaseElement element = null;
+            if (type == null) {
+                return null;
+            } else if (type.equalsIgnoreCase(ELEMENT_TYPE_BUTTON)) {
+                CaseElementButton button = new CaseElementButton();
+                element = button;
+            } else if (type.equalsIgnoreCase(ELEMENT_TYPE_DISPLAY)) {
+                element = new CaseElementDisplay();
+            } else if (type.equalsIgnoreCase(ELEMENT_TYPE_SPECIAL)) {
+                element = new CaseElementSpecial();
+            }
+            if (element != null) {
+                element.setTexts(text);
+                element.setFormName(formName);
+                element.setType(type);
+            }
+            return element;
         }
     }
 }

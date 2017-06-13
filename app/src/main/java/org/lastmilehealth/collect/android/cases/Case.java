@@ -1,33 +1,40 @@
 package org.lastmilehealth.collect.android.cases;
 
-import org.javarosa.core.model.FormDef;
+import org.lastmilehealth.collect.android.parser.InstanceElement;
 
-import java.util.List;
+import java.util.Date;
 
 /**
  * Created by Anton Donchev on 05.05.2017.
  */
 
 public interface Case {
+    String getCaseUUID();
+
     String getDisplayName();
 
-    FormDef getPrimaryForm();
+    InstanceElement getPrimaryForm();
 
     String getPrimaryVariableName();
 
     String getPrimaryVariableValue();
 
-    List<FormDef> getSecondaryForms();
+    Date getLastModifiedDate();
 
     /**
      * Returns the elements of this case.
      */
-    List<CaseElement> getCaseElements();
+    CaseElement getCaseElements();
 
     /**
      * Checks if the case is closed.
      */
     boolean isClosed();
+
+    /**
+     * Checks if the case details are loaded.
+     */
+    boolean isLoaded();
 
     /**
      * Returns the status of the case.
@@ -38,6 +45,8 @@ public interface Case {
      * This method loads all reference instances connected to that case.
      */
     void loadReferences();
+
+    void dispose();
 
     interface Status {
         /**
@@ -52,17 +61,17 @@ public interface Case {
         /**
          * The case has been parsed. It's name and structure is retrieved, but it's references and sub-properties are not loaded.
          */
-        int INITIALIZED = 1;
+        int INITIALIZED = 100;
 
         /**
          * Primary forms loaded.
          */
-        int PRIMARY_LOADED = 2;
+        int PRIMARY_LOADED = 200;
 
         /**
          * The case and it's references are parsed and it is fully loaded.
          */
-        int FULLY_LOADED = 3;
+        int FULLY_LOADED = 9999;
     }
 
 }

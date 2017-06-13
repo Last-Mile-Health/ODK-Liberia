@@ -11,4 +11,6 @@ public interface LoadingTask {
     boolean isSuccessful();
 
     Exception getError();
+
+    void cancel();
 }

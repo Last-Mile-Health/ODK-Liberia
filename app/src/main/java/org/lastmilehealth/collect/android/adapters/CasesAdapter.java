@@ -11,6 +11,7 @@ import org.lastmilehealth.collect.android.R;
 import org.lastmilehealth.collect.android.cases.Case;
 import org.lastmilehealth.collect.android.cases.CaseCollection;
 import org.lastmilehealth.collect.android.cases.CaseType;
+import org.lastmilehealth.collect.android.filter.CaseFilter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,8 @@ import java.util.List;
 public class CasesAdapter extends BaseAdapter {
     private final CaseType caseType;
     private List<Case> cases = new ArrayList<>();
+    private CaseFilter filter;
+    private CaseFilter sortingMethod;
 
     public CasesAdapter(CaseType caseType) {
         this.caseType = caseType;
@@ -73,9 +76,30 @@ public class CasesAdapter extends BaseAdapter {
         CaseCollection cases = caseType.getCases();
         this.cases.clear();
         if (cases != null) {
-            this.cases.addAll(cases.values());
+            if (filter != null) {
+                this.cases.addAll(filter.filter(cases.values()));
+            } else {
+                this.cases.addAll(cases.values());
+            }
+            if (sortingMethod != null) {
+                this.cases = sortingMethod.filter(this.cases);
+            }
         }
         notifyDataSetChanged();
+    }
+
+    public void applyFilter(CaseFilter filter) {
+        this.filter = filter;
+        update();
+    }
+
+    public void applySortingMethod(CaseFilter sortingMethod) {
+        this.sortingMethod = sortingMethod;
+        update();
+    }
+
+    public boolean hasFilter() {
+        return filter != null;
     }
 
     private class ViewHolder {

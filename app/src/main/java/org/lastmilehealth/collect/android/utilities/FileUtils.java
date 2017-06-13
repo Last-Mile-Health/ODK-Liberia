@@ -14,15 +14,15 @@
 
 package org.lastmilehealth.collect.android.utilities;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Log;
+
 import org.apache.commons.io.IOUtils;
 import org.javarosa.xform.parse.XFormParser;
 import org.kxml2.kdom.Document;
 import org.kxml2.kdom.Element;
 import org.kxml2.kdom.Node;
-
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Log;
 import org.lastmilehealth.collect.android.R;
 import org.lastmilehealth.collect.android.application.Collect;
 
@@ -56,6 +56,7 @@ public class FileUtils {
     public static final String TITLE = "title";
     public static final String SUBMISSIONURI = "submission";
     public static final String BASE64_RSA_PUBLIC_KEY = "base64RsaPublicKey";
+    public static final String FORM_NAME = "formName";
 
 
     public static boolean createFolder(String path) {
@@ -325,6 +326,7 @@ public class FileUtils {
 
                 String version = cur.getAttributeValue(null, "version");
                 String uiVersion = cur.getAttributeValue(null, "uiVersion");
+                String formName = cur.getAttributeValue(null, "name");
                 if ( uiVersion != null ) {
                 	// pre-OpenRosa 1.0 variant of spec
                 	Log.e(t, "Obsolete use of uiVersion -- IGNORED -- only using version: " + version);
@@ -332,6 +334,7 @@ public class FileUtils {
 
                 fields.put(FORMID, (id == null) ? xmlns : id);
                 fields.put(VERSION, (version == null) ? null : version);
+                fields.put(FORM_NAME, formName);
             } else {
                 throw new IllegalStateException(xmlFile.getAbsolutePath() + " could not be parsed");
             }

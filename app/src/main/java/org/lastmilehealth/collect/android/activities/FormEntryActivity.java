@@ -34,6 +34,7 @@ import android.preference.PreferenceManager;
 import android.provider.MediaStore.Images;
 import android.text.InputFilter;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -71,6 +72,7 @@ import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryPrompt;
 import org.lastmilehealth.collect.android.R;
 import org.lastmilehealth.collect.android.application.Collect;
+import org.lastmilehealth.collect.android.cases.CaseManager;
 import org.lastmilehealth.collect.android.exception.JavaRosaException;
 import org.lastmilehealth.collect.android.listeners.AdvanceToNextListener;
 import org.lastmilehealth.collect.android.listeners.FormLoaderListener;
@@ -78,6 +80,7 @@ import org.lastmilehealth.collect.android.listeners.FormSavedListener;
 import org.lastmilehealth.collect.android.listeners.SavePointListener;
 import org.lastmilehealth.collect.android.logic.FormController;
 import org.lastmilehealth.collect.android.logic.FormController.FailedConstraint;
+import org.lastmilehealth.collect.android.manager.Manager;
 import org.lastmilehealth.collect.android.preferences.AdminPreferencesActivity;
 import org.lastmilehealth.collect.android.preferences.PreferencesActivity;
 import org.lastmilehealth.collect.android.provider.FormsProviderAPI.FormsColumns;
@@ -89,6 +92,7 @@ import org.lastmilehealth.collect.android.tasks.SaveResult;
 import org.lastmilehealth.collect.android.tasks.SaveToDiskTask;
 import org.lastmilehealth.collect.android.utilities.CompatibilityUtils;
 import org.lastmilehealth.collect.android.utilities.FileUtils;
+import org.lastmilehealth.collect.android.utilities.FormsUtils;
 import org.lastmilehealth.collect.android.utilities.MediaUtils;
 import org.lastmilehealth.collect.android.views.ODKView;
 import org.lastmilehealth.collect.android.widgets.QuestionWidget;
@@ -165,10 +169,11 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 	public static final String KEY_INSTANCEPATH = "instancepath";
 	public static final String KEY_XPATH = "xpath";
 	public static final String KEY_XPATH_WAITING_FOR_DATA = "xpathwaiting";
+	public static final String KEY_CASE_UUID = "caseUuid";
 
 	// Tracks whether we are autosaving
 	public static final String KEY_AUTO_SAVED = "autosaved";
-	
+
 	private static final int MENU_LANGUAGES = Menu.FIRST;
 	private static final int MENU_HIERARCHY_VIEW = Menu.FIRST + 1;
 	private static final int MENU_SAVE = Menu.FIRST + 2;
@@ -176,7 +181,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
 	private static final int PROGRESS_DIALOG = 1;
 	private static final int SAVING_DIALOG = 2;
-	
+
 	private boolean mAutoSaved;
 
 	// Random ID
@@ -2287,9 +2292,16 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 			}
 		}
 
+		String caseUuid = getIntent().getStringExtra(KEY_CASE_UUID);
+		if (!TextUtils.isEmpty(caseUuid)) {
+		    Manager.getCaseManager().onEvent(CaseManager.State.CASE_DATA_INVALIDATED);
+		}
+
 		super.onDestroy();
 
 	}
+
+
 
 	private int mAnimationCompletionSet = 0;
 
@@ -2454,6 +2466,11 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 				return; // so we don't show the intro screen before jumping to
 						// the hierarchy
 			}
+		}
+
+		String caseUuid = getIntent().getStringExtra(KEY_CASE_UUID);
+		if (!TextUtils.isEmpty(caseUuid)) {
+			FormsUtils.setCaseUuidToForm(caseUuid, formController);
 		}
 
 		refreshCurrentView();

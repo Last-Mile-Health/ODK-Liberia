@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="retention_time_default_expiration">180</integer>
+    <integer name="retention_time_min_expiration">0</integer>
+    <integer name="retention_time_max_expiration">2147483647</integer>
+    <string name="retention_time_default_variable_name"></string>
+</resources>

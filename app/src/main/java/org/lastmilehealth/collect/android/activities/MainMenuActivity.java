@@ -47,6 +47,7 @@ import android.widget.Toast;
 
 import org.lastmilehealth.collect.android.R;
 import org.lastmilehealth.collect.android.application.Collect;
+import org.lastmilehealth.collect.android.manager.Manager;
 import org.lastmilehealth.collect.android.parser.TinyDB;
 import org.lastmilehealth.collect.android.parser.XMLParser;
 import org.lastmilehealth.collect.android.preferences.AdminPreferencesActivity;
@@ -114,6 +115,7 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
     private int mFormsCount = 0;
 
     private static boolean EXIT = true;
+    private Button mSummaryButton;
 
     @Override
     public android.content.Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
@@ -226,6 +228,19 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
             }
         });
 
+        mSummaryButton = (Button) findViewById(R.id.summary);
+
+        mSummaryButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Collect.getInstance().getActivityLogger()
+                       .logAction(this, "viewCases", "click");
+                Intent i = new Intent(getApplicationContext(),
+                                      SummaryActivity.class);
+                startActivity(i);
+            }
+        });
+
         // manage forms button. no result expected.
         /**mGetFormsButton = (Button) findViewById(R.id.get_forms);
          //mGetFormsButton.setText(getString(R.string.get_forms));
@@ -258,6 +273,8 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
         LoaderManager lm = getLoaderManager();
         lm.initLoader(LOADER_FORMS_ID, null, mCallbacks);
         lm.initLoader(LOADER_INSTANCES_ID, null, mCallbacks);
+
+        Manager.getRetentionManager().findAndDeleteOldForms();
     }
 
     private void onFillForm(){
@@ -430,6 +447,7 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
     protected void onResume() {
         super.onResume();
         invalidateOptionsMenu();
+        Manager.getCaseManager().reset();
     }
 
     @Override

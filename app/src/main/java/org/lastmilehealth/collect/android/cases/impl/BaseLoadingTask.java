@@ -9,6 +9,7 @@ import org.lastmilehealth.collect.android.cases.LoadingTask;
 public abstract class BaseLoadingTask implements LoadingTask, Runnable {
     protected boolean success = false;
     protected Exception error;
+    protected boolean canceled = false;
 
     @Override
     public void start() {
@@ -26,5 +27,8 @@ public abstract class BaseLoadingTask implements LoadingTask, Runnable {
         return error;
     }
 
-
+    @Override
+    public void cancel() {
+        canceled = true;
+    }
 }

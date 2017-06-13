@@ -1,6 +1,7 @@
 package org.lastmilehealth.collect.android.cases;
 
 import org.lastmilehealth.collect.android.manager.EventHandler;
+import org.lastmilehealth.collect.android.parser.InstanceElement;
 
 import java.util.Collection;
 
@@ -28,20 +29,16 @@ public interface CaseType extends EventHandler {
     CaseCollection getCases();
 
     /**
-     * Loads all primary form instances.
-     */
-    void loadFormInstances();
-
-    /**
-     * Creates cases from the loaded form instances.
-     */
-    void createCaseInstances();
-
-    /**
      * Checks if all primary forms were loaded.
      */
 
     boolean isCaseListLoaded();
+
+    /**
+     * Case details are loaded.
+     */
+    boolean isCaseDetailsLoaded();
+
     /**
      * This is the name of the primary form for the cases.
      */
@@ -56,6 +53,16 @@ public interface CaseType extends EventHandler {
      * These are the names of secondary forms.
      */
     Collection<String> getSecondaryFormNames();
+
+    SecondaryFormsMap getSecondaryForms();
+
+    CaseElement getCaseElement();
+
+    void setCaseElement(CaseElement caseElement);
+
+    void reset();
+
+    Collection<InstanceElement> getCaseSecondaryForms(Case caseInstance);
 
     interface Event {
         /**
@@ -73,9 +80,24 @@ public interface CaseType extends EventHandler {
         int CASES_LIST_LOADED = 12;
 
         /**
+         * Started loading case details.
+         */
+        int CASE_DETAILS_LOADING = 13;
+
+        /**
+         * Case type details loaded.
+         */
+        int CASE_DETAILS_LOADED = 14;
+
+        /**
          * Failed to load cases list for some reason.
          */
-        int CASES_LIST_FAILED = -1;
+        int CASE_LIST_FAILED = -1;
+
+        /**
+         * Failed to load case details.
+         */
+        int CASE_DETAILS_FAILED = -2;
     }
 
 }

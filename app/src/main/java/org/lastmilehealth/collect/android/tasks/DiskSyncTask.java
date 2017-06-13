@@ -20,6 +20,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.lastmilehealth.collect.android.R;
@@ -307,6 +308,7 @@ public class DiskSyncTask extends AsyncTask<Void, String, String> {
         String formid = fields.get(FileUtils.FORMID);
         String submission = fields.get(FileUtils.SUBMISSIONURI);
         String base64RsaPublicKey = fields.get(FileUtils.BASE64_RSA_PUBLIC_KEY);
+		String formName = fields.get(FileUtils.FORM_NAME);
 
         // update date
         Long now = Long.valueOf(System.currentTimeMillis());
@@ -333,7 +335,10 @@ public class DiskSyncTask extends AsyncTask<Void, String, String> {
         if (base64RsaPublicKey != null) {
         	updateValues.put(FormsColumns.BASE64_RSA_PUBLIC_KEY, base64RsaPublicKey);
         }
-        // Note, the path doesn't change here, but it needs to be included so the
+		if (!TextUtils.isEmpty(formName)) {
+			updateValues.put(FormsColumns.FORM_NAME, formName);
+		}
+		// Note, the path doesn't change here, but it needs to be included so the
         // update will automatically update the .md5 and the cache path.
         updateValues.put(FormsColumns.FORM_FILE_PATH, formDefFile.getAbsolutePath());
         

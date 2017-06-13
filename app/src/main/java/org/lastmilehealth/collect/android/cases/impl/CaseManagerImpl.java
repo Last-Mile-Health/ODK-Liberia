@@ -8,8 +8,12 @@ import org.lastmilehealth.collect.android.cases.CaseCollection;
 import org.lastmilehealth.collect.android.cases.CaseManager;
 import org.lastmilehealth.collect.android.cases.CaseManagerLoadingTask;
 import org.lastmilehealth.collect.android.cases.CaseType;
+import org.lastmilehealth.collect.android.cases.LoadingTask;
 import org.lastmilehealth.collect.android.manager.Manager;
+import org.lastmilehealth.collect.android.parser.XmlInstanceParser;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -22,6 +26,7 @@ public class CaseManagerImpl extends Manager implements CaseManager {
     private int state = State.INITIALIZED;
     private List<CaseType> cases;
     private CaseManagerLoadingTask task;
+    private final Collection<LoadingTask> executedTasks = new ArrayList<>();
 
     @Override
     public boolean isLoaded() {
@@ -55,7 +60,23 @@ public class CaseManagerImpl extends Manager implements CaseManager {
     }
 
     @Override
-    public void loadCaseDetails(Case instance) {
+    public void loadCaseTypeDetails(CaseType caseType) {
+        if (caseType.isCaseListLoaded()) {
+            if (caseType.isCaseDetailsLoaded()) {
+                caseType.onEvent(CaseType.Event.CASE_DETAILS_LOADED);
+            } else {
+                DefaultCaseDetailsLoadingTask task = new DefaultCaseDetailsLoadingTask(caseType);
+                executedTasks.add(task);
+                task.start();
+            }
+        } else {
+            caseType.onEvent(CaseType.Event.CASE_LIST_FAILED);
+        }
+    }
+
+    @Override
+    public void loadCaseDetails(CaseType caseType,
+                                Case caseInstance) {
 
     }
 
@@ -97,6 +118,24 @@ public class CaseManagerImpl extends Manager implements CaseManager {
         }
 
 
+    }
+
+    @Override
+    public void reset() {
+        if (cases != null) {
+            for (CaseType caseType : cases) {
+                caseType.reset();
+            }
+        }
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
+        for (LoadingTask xTask : executedTasks) {
+            xTask.cancel();
+        }
+        executedTasks.clear();
+        XmlInstanceParser.resetCache();
     }
 
 

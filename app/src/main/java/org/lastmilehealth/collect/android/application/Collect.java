@@ -60,6 +60,8 @@ public class Collect extends Application {
     public static final String ROLES_BAD_PATH = ODK_ROOT + File.separator + "forms" + File.separator + "ROLES.xml.bad";
     public static final String CASES_PATH = FORMS_PATH + File.separator + "ODKL_cases.xml";
     public static final String CASES_BAD_PATH = FORMS_PATH + File.separator + "ODKL_cases.bad";
+    public static final String SUMMARY_PATH = FORMS_PATH + File.separator + "ODKL_summaries.xml";
+    public static final String SUMMARY_BAD_PATH = FORMS_PATH + File.separator + "ODKL_summaries.bad";
 
     public static final String ZIP_PATH = ODK_ROOT + File.separator + "data.zip";
     public static final String FORMS_FLAG_PATH = FORMS_PATH + File.separator + "forms.txt";
@@ -71,6 +73,8 @@ public class Collect extends Application {
     public static final String DEFAULT_FONTSIZE = "21";
 
     public static final Handler MAIN_THREAD_HANDLER = new Handler(Looper.getMainLooper());
+
+    public static final int DEFAULT_RETENTION_TIME_EXPIRATION_TIME = 180; // days
 
     // share all session cookies across all sessions...
     private CookieStore cookieStore = new BasicCookieStore();

@@ -41,7 +41,7 @@ import android.widget.ImageView.ScaleType;
 
 /**
  * This layout is used anywhere we can have image/audio/video/text. TODO: It would probably be nice
- * to put this in a layout.xml file of some sort at some point.
+ * to putByName this in a layout.xml file of some sort at some point.
  * 
  * @author carlhartung
  */

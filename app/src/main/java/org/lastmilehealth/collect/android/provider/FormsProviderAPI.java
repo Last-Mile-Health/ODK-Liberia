@@ -42,6 +42,7 @@ public final class FormsProviderAPI {
 
         // These are the only things needed for an insert
         public static final String DISPLAY_NAME = "displayName";
+        public static final String FORM_NAME = "formName";
         public static final String DESCRIPTION = "description";  // can be null
         public static final String JR_FORM_ID = "jrFormId";
         public static final String JR_VERSION = "jrVersion"; // can be null

@@ -60,6 +60,14 @@
                 android:text="@string/case_types_button"
                 android:textSize="21sp" />
 
+            <Button
+                android:id="@+id/summary"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                android:text="@string/summary_button"
+                android:textSize="21sp" />
+
         </LinearLayout>
     </ScrollView>
 

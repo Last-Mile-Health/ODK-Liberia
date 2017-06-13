@@ -91,7 +91,7 @@ public class FormController {
     };
     
     /**
-     * Classes needed to serialize objects. Need to put anything from JR in here.
+     * Classes needed to serialize objects. Need to putByName anything from JR in here.
      */
     private final static String[] SERIALIABLE_CLASSES = {
     		"org.javarosa.core.services.locale.ResourceFileDataSource", // JavaRosaCoreModule

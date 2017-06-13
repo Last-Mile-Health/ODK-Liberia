@@ -39,10 +39,19 @@ public interface CaseManager extends EventHandler {
 
 
     /**
-     * Executes loading of a case details.
-     * This loads all the case details by loading secondary forms and all case elements.
+     * Executes loading of a case type details.
+     * This loads secondary case type forms.
      */
-    void loadCaseDetails(Case instance);
+    void loadCaseTypeDetails(CaseType caseType);
+
+    /**
+     * This loads the specific case elements.
+     *
+     * @param caseType
+     * @param caseInstance
+     */
+    void loadCaseDetails(CaseType caseType,
+                         Case caseInstance);
 
     /**
      * Starts loading the case manager.
@@ -54,7 +63,14 @@ public interface CaseManager extends EventHandler {
      * Executes loading the cases list for this case type.
      * This loads only the primary forms of the cases and not all the details.
      */
-    void loadCaseType(CaseType caseType, Context activity);
+    void loadCaseType(CaseType caseType,
+                      Context activity);
+
+    /**
+     * Resets the manager cache.
+     */
+    void reset();
+
 
     interface State {
         /**
@@ -77,5 +93,10 @@ public interface CaseManager extends EventHandler {
          * The manager failed to load.
          */
         int FAILED = 3;
+
+        /**
+         * Fired when a case data has been altered.
+         */
+        int CASE_DATA_INVALIDATED = 1001;
     }
 }

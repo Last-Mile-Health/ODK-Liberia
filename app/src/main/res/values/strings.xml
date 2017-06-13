@@ -124,6 +124,7 @@
     <string name="review_data">Edit Saved Form</string>
     <string name="review_data_button">Edit Saved Form (%s)</string>
     <string name="case_types_button">View Cases</string>
+    <string name="summary_button">Summary Statistics</string>
     <string name="saved_data">Incomplete (%s)</string>
     <string name="save_all_answers">Save Form</string>
     <string name="save_enter_data_description">You are at the end of %s.</string>
@@ -335,4 +336,13 @@
     <string name="choose_role">Choose role</string>
     <string name="case_types_loading">Loading cases&#8230;</string>
     <string name="case_types_screen_title">View Cases</string>
+    <string name="retention_time_variable_dialog_title">Set time variable name</string>
+    <string name="retention_time_expiration_dialog_title">Set form retention time</string>
+    <string name="view_cases_list_duplicate_names">There are duplicate names in the list.</string>
+    <string name="dialog_filter_sort_alpha">Sort: (A-Z)</string>
+    <string name="dialog_filter_sort_oldest">Sort: Oldest first</string>
+    <string name="dialog_filter_sort_newest">Sort: Newest first</string>
+    <string name="dialog_filter_filter_week">Filter: Last 7 days</string>
+    <string name="dialog_filter_filter_month">Filter: Last 30 days</string>
+    <string name="dialog_filter_filter_trimonth">Filter: Last 90 days</string>
 </resources>

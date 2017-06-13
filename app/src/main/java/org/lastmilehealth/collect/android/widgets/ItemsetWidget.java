@@ -192,7 +192,7 @@ public class ItemsetWidget extends QuestionWidget implements
         if (nullArgs) {
             // we can't try to query with null values else it blows up
             // so just leave the screen blank
-            // TODO: put an error?
+            // TODO: putByName an error?
         } else if (itemsetFile.exists()) {
             ItemsetDbAdapter ida = new ItemsetDbAdapter();
             ida.open();
