@@ -50,8 +50,10 @@ public class XMLParser {
 
     public void parseXML() {
         List<Roles> rolesList = new ArrayList<>();
+            XmlParserUtils.XmlPullParserHolder parserHolder = null;
         try {
-            XmlPullParser parser = XmlParserUtils.getXMLFile(Collect.ROLES_PATH);
+            parserHolder = XmlParserUtils.getXMLFile(Collect.ROLES_PATH);
+            XmlPullParser parser = parserHolder.parser;
             mPermissions = new ArrayList<>();
             mNames = new ArrayList<>();
 
@@ -82,9 +84,15 @@ public class XMLParser {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        finally {
+            if (parserHolder != null) {
+                parserHolder.dispose();
+            }
+        }
         if (!rolesList.isEmpty()) {
             saveToSharedPreferences((ArrayList<Roles>) rolesList);
         }
+
         Log.d("Roles", rolesList.toString());
     }
 

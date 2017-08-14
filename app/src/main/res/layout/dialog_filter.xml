@@ -55,6 +55,13 @@
             android:layout_height="wrap_content"
             android:text="@string/dialog_filter_filter_trimonth"/>
 
+        <TextView
+            android:id="@+id/filter_clear"
+            style="@style/DialogFilterOption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/dialog_filter_clear_all"/>
+
 
     </LinearLayout>
 

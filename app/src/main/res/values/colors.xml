@@ -18,7 +18,8 @@ the License.
 
     <drawable name="white">#ffffffff</drawable>
     <drawable name="black">#ff000000</drawable>
-    <color name="text_filter_enabled">#f000</color>
-    <color name="text_filter_disabled">#ccc</color>
+    <color name="bg_filter_selected">#ffdae3f3</color>
+    <color name="bg_filter_normal">#0000</color>
+    <color name="text_filter_disabled">#f888</color>
 
 </resources>

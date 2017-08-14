@@ -1,5 +1,6 @@
 package org.lastmilehealth.collect.android.cases;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -10,4 +11,6 @@ import java.util.Map;
  */
 
 public interface CaseCollection extends Map<String, Case> {
+
+    Collection<Case> getOpenCases();
 }

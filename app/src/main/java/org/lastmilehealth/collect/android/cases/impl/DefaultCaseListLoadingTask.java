@@ -13,7 +13,9 @@ import org.lastmilehealth.collect.android.parser.XmlInstanceParser;
 import org.lastmilehealth.collect.android.provider.InstanceProviderAPI;
 import org.lastmilehealth.collect.android.utilities.FormsUtils;
 
-import static org.lastmilehealth.collect.android.utilities.FormsUtils.CASE_STATUS_CLOSED;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Anton Donchev on 11.05.2017.
@@ -33,44 +35,31 @@ public class DefaultCaseListLoadingTask extends BaseLoadingTask implements CaseL
     @Override
     public void run() {
         Cursor instanceCursor = null;
+        Cursor archivesCursor = null;
 
         if (TextUtils.isEmpty(caseType.getPrimaryFormName())) {
             sendEvent(CaseType.Event.CASE_LIST_FAILED);
         } else {
             try {
                 sendEvent(CaseType.Event.CASES_LIST_LOADING);
-                instanceCursor = FormsUtils.getInstancesCursor(context, null);
+                instanceCursor = FormsUtils.getInstanceCursor(context, InstanceProviderAPI.InstanceColumns.CONTENT_URI, true);
+
                 CaseCollection caseCollection = new CaseCollectionImpl();
+                caseType.resetInstances();
 
+                Map<String, CaseImpl> processedCases = new HashMap<>();
 
-                for (boolean hasItem = instanceCursor.moveToFirst(); hasItem; hasItem = instanceCursor.moveToNext()) {
-                    try {
-                        String instanceFilePath = instanceCursor.getString(instanceCursor.getColumnIndex(InstanceProviderAPI.InstanceColumns.INSTANCE_FILE_PATH));
-                        XmlInstanceParser parser = new XmlInstanceParser(instanceFilePath);
-                        InstanceElement root = parser.parse();
-                        String formName = root.getAttributes().get(FormsUtils.ATTR_FORM_NAME);
-                        if (TextUtils.equals(formName, caseType.getPrimaryFormName())) {
-                            String uuid = FormsUtils.getVariableValue(FormsUtils.CASE_UUID, root);
-                            String caseStatus = FormsUtils.getVariableValue(FormsUtils.CASE_STATUS, root);
-                            if (!TextUtils.isEmpty(uuid) && !TextUtils.equals(caseStatus, FormsUtils.CASE_STATUS_CLOSED)) {
-                                CaseImpl instance = new CaseImpl();
-                                instance.setPrimaryForm(root);
-                                instance.setPrimaryVariableName(caseType.getPrimaryVariable());
-                                instance.setUuid(uuid);
-                                caseCollection.put(uuid, instance);
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Continue to next case or cancel.
-                    }
-                    if (canceled) {
-                        break;
-                    }
-                }
+                processCursor(instanceCursor, caseCollection, processedCases, false);
+
+                archivesCursor = FormsUtils.getInstanceCursor(context, InstanceProviderAPI.InstanceColumns.CONTENT_URI_ARCHIVES, true);
+                processCursor(archivesCursor, caseCollection, processedCases, true);
+
+                processedCases.clear();
 
                 if (!canceled) {
                     caseType.getCases().putAll(caseCollection);
                     sendEvent(CaseType.Event.CASES_LIST_LOADED);
+                    sendEvent(CaseType.Event.CASE_DETAILS_LOADED);
                 } else {
                     sendEvent(CaseType.Event.CASE_LIST_FAILED);
                 }
@@ -81,6 +70,9 @@ public class DefaultCaseListLoadingTask extends BaseLoadingTask implements CaseL
                 if (instanceCursor != null) {
                     instanceCursor.close();
                 }
+                if (archivesCursor != null) {
+                    archivesCursor.close();
+                }
             }
         }
     }
@@ -88,6 +80,58 @@ public class DefaultCaseListLoadingTask extends BaseLoadingTask implements CaseL
     @Override
     public CaseCollection getCaseCollection() {
         return caseCollection;
+    }
+
+    private void processCursor(Cursor cursor,
+                               CaseCollection caseCollection,
+                               Map<String, CaseImpl> processedCases,
+                               boolean isArchives) {
+        for (boolean hasItem = cursor.moveToFirst(); hasItem; hasItem = cursor.moveToNext()) {
+            try {
+                String instanceFilePath = cursor.getString(cursor.getColumnIndex(InstanceProviderAPI.InstanceColumns.INSTANCE_FILE_PATH));
+                if (isArchives) {
+                    instanceFilePath = instanceFilePath.replace(Collect.INSTANCES_PATH, Collect.ARCHIVE_PATH);
+                }
+                XmlInstanceParser parser = new XmlInstanceParser(instanceFilePath);
+                InstanceElement root = parser.parse();
+                String formName = root.getAttributes().get(FormsUtils.ATTR_FORM_NAME);
+                String uuid = FormsUtils.getVariableValue(FormsUtils.CASE_UUID, root);
+                if (!TextUtils.isEmpty(uuid)) {
+                    CaseImpl instance = processedCases.get(uuid);
+                    if (instance == null) {
+                        instance = new CaseImpl();
+                        instance.setUuid(uuid);
+                        caseCollection.put(uuid, instance);
+                        processedCases.put(uuid, instance);
+                    }
+                    if (TextUtils.equals(formName, caseType.getPrimaryFormName())) {
+                        instance.setPrimaryForm(root);
+                        instance.setPrimaryVariableName(caseType.getPrimaryVariable());
+                    } else if (isSecondaryForm(formName, caseType.getSecondaryFormNames())) {
+                        caseType.getSecondaryForms().put(uuid, root);
+                        instance.getSecondaryForms().add(root);
+                    }
+                }
+            } catch (Exception e) {
+                toString();
+                // Continue to next case or cancel.
+            }
+            if (canceled) {
+                break;
+            }
+        }
+    }
+
+    private boolean isSecondaryForm(String formName,
+                                    Collection<String> secondaryForms) {
+        if (secondaryForms != null && secondaryForms.size() > 0 && !TextUtils.isEmpty(formName)) {
+            for (String secondaryFormName : secondaryForms) {
+                if (formName.equalsIgnoreCase(secondaryFormName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void sendEvent(final int eventId) {

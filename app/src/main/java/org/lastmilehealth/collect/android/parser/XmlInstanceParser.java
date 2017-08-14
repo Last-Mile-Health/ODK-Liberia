@@ -34,32 +34,41 @@ public class XmlInstanceParser {
             return cachedElement;
         }
 
-        XmlPullParser parser = XmlParserUtils.getXMLFile(instancePath);
+        XmlParserUtils.XmlPullParserHolder parserHolder = null;
+        try {
+            parserHolder = XmlParserUtils.getXMLFile(instancePath);
+            XmlPullParser parser = parserHolder.parser;
 
-        // loop through the elements until the end of the document is reached.
-        while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
+            // loop through the elements until the end of the document is reached.
+            while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
 
-            switch (parser.getEventType()) {
+                switch (parser.getEventType()) {
 
-                case XmlPullParser.START_TAG:
-                    handleStartTag(parser);
-                    break;
+                    case XmlPullParser.START_TAG:
+                        handleStartTag(parser);
+                        break;
 
-                case XmlPullParser.END_TAG:
-                    handleEndTag(parser);
-                    break;
+                    case XmlPullParser.END_TAG:
+                        handleEndTag(parser);
+                        break;
 
-                case XmlPullParser.TEXT:
-                    handlerText(parser);
+                    case XmlPullParser.TEXT:
+                        handlerText(parser);
 
-                default:
-                    break;
+                    default:
+                        break;
+                }
+
+                parser.next();
             }
-
-            parser.next();
+            INSTANCE_ELEMENTS_CACHE.put(instancePath, rootElement);
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (parserHolder != null) {
+                parserHolder.dispose();
+            }
         }
-        INSTANCE_ELEMENTS_CACHE.put(instancePath, rootElement);
-
         return rootElement;
     }
 

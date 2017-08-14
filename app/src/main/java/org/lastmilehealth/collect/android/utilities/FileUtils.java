@@ -212,9 +212,22 @@ public class FileUtils {
         return b;
     }
 
-
     public static String copyFile(File sourceFile, File destFile) {
+        return copyFile(sourceFile, destFile, true);
+    }
+
+
+    public static String copyFile(File sourceFile, File destFile, boolean replace) {
         if (sourceFile.exists()) {
+            if (destFile.exists() && replace) {
+                destFile.delete();
+            }
+            try {
+                destFile.getParentFile().mkdirs();
+                destFile.createNewFile();
+            } catch (Exception e) {
+                return "Failed to create file";
+            }
             String errorMessage = actualCopy(sourceFile, destFile);
             if (errorMessage != null) {
                 try {

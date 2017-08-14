@@ -67,37 +67,49 @@ public class XmlCaseParser {
      * Parses the main cases file which should be located in the root odk folder by design.
      */
     public List<CaseType> parse() throws Exception {
-        XmlPullParser parser = XmlParserUtils.getXMLFile(Collect.CASES_PATH, Collect.CASES_BAD_PATH);
-        caseTypes = new ArrayList<>();
+        XmlParserUtils.XmlPullParserHolder parserHolder = null;
+        try {
+            parserHolder = XmlParserUtils.getXMLFile(Collect.CASES_PATH, Collect.CASES_BAD_PATH);
 
-        // loop through the elements until the end of the document is reached.
-        while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
+            XmlPullParser parser = parserHolder.parser;
 
-            switch (parser.getEventType()) {
+            caseTypes = new ArrayList<>();
 
-                case XmlPullParser.START_TAG:
-                    handleStartTag(parser);
-                    break;
+            // loop through the elements until the end of the document is reached.
+            while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
 
-                case XmlPullParser.END_TAG:
-                    handleEndTag(parser);
-                    break;
+                switch (parser.getEventType()) {
 
-                case XmlPullParser.TEXT:
-                    text = parser.getText();
+                    case XmlPullParser.START_TAG:
+                        handleStartTag(parser);
+                        break;
 
-                default:
-                    break;
+                    case XmlPullParser.END_TAG:
+                        handleEndTag(parser);
+                        break;
+
+                    case XmlPullParser.TEXT:
+                        text = parser.getText();
+
+                    default:
+                        break;
+                }
+
+
+                parser.next();
             }
-
-
-            parser.next();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            parsedCaseType = null;
+            secondaryForms = null;
+            caseElementRoot = null;
+            currentGroup = null;
+            currentElement = null;
+            if (parserHolder != null) {
+                parserHolder.dispose();
+            }
         }
-        parsedCaseType = null;
-        secondaryForms = null;
-        caseElementRoot = null;
-        currentGroup = null;
-        currentElement = null;
         return caseTypes;
     }
 
@@ -235,9 +247,9 @@ public class XmlCaseParser {
     }
 
     private class ElementHolder {
+        private final List<CaseTextElement> text = new ArrayList<>();
         private String type;
         private String formName;
-        private final List<CaseTextElement> text = new ArrayList<>();
 
         private CaseElement createElement() {
             BasicCaseElement element = null;

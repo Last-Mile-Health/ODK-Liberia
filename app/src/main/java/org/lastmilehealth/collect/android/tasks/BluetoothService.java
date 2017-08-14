@@ -29,9 +29,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.widget.Toast;
 
-import com.github.snowdream.android.util.FilePathGenerator;
 import com.github.snowdream.android.util.Log;
 
 import org.lastmilehealth.collect.android.application.Collect;
@@ -712,6 +710,7 @@ public class BluetoothService {
         String dbpath = Collect.TMP_PATH+"/instances.db";
         SQLiteDatabase db = SQLiteDatabase.openDatabase(dbpath, null, SQLiteDatabase.OPEN_READONLY);
         Cursor cursor = db.query(InstanceProvider.INSTANCES_TABLE_NAME, null, null, null, null, null, null);
+
         Log.d("~", "cursor.getCount(): " + cursor.getCount());
 
         cursor.moveToPosition(-1);
@@ -740,7 +739,9 @@ public class BluetoothService {
                     org.apache.commons.io.FileUtils.deleteQuietly( new File(Collect.TMP_PATH, fromName));
                 } catch (Exception e) {}
             } else {
-                newFilePath = new File(Collect.INSTANCES_PATH, instanceFilePath.substring(instanceFilePath.lastIndexOf("/"))).getAbsolutePath();
+                // The instances are located in a folder inside instances folder so we are searching for instances/ in the file path and replace it with
+                // the path of this device instances dir.
+                newFilePath = new File(Collect.INSTANCES_PATH, instanceFilePath.substring(instanceFilePath.lastIndexOf("instances/")+9)).getAbsolutePath();
                 Log.d(TAG, "not exist, new path "+newFilePath);
             }
 
@@ -757,8 +758,10 @@ public class BluetoothService {
             values.put(InstanceProviderAPI.InstanceColumns.INSTANCE_FILE_PATH, newFilePath);
             values.put(InstanceProviderAPI.InstanceColumns.JR_FORM_ID, cursor.getString(cursor.getColumnIndex(InstanceProviderAPI.InstanceColumns.JR_FORM_ID)));
             values.put(InstanceProviderAPI.InstanceColumns.JR_VERSION, cursor.getString(cursor.getColumnIndex(InstanceProviderAPI.InstanceColumns.JR_VERSION)));
-            values.put(InstanceProviderAPI.InstanceColumns.STATUS, cursor.getString(cursor.getColumnIndex(InstanceProviderAPI.InstanceColumns.STATUS)));
-            values.put(InstanceProviderAPI.InstanceColumns.CAN_EDIT_WHEN_COMPLETE, cursor.getString(cursor.getColumnIndex(InstanceProviderAPI.InstanceColumns.CAN_EDIT_WHEN_COMPLETE)));
+            values.put(InstanceProviderAPI.InstanceColumns.STATUS, InstanceProviderAPI.STATUS_COMPLETE);
+            values.put(InstanceProviderAPI.InstanceColumns.CAN_EDIT_WHEN_COMPLETE, "false");
+            values.put(InstanceProviderAPI.InstanceColumns.APP_ID, cursor.getString(cursor.getColumnIndex(InstanceProviderAPI.InstanceColumns.APP_ID)));
+            values.put(InstanceProviderAPI.InstanceColumns.IS_TRANSFERRED, 1);
 
             Log.d(TAG, "insert new instance record: "+newInstanceName+" with path :"+newFilePath);
             Collect.getInstance().getContentResolver().insert(InstanceProviderAPI.InstanceColumns.CONTENT_URI, values);

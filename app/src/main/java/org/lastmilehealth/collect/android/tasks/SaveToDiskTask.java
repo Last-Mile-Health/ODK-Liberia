@@ -14,10 +14,11 @@
 
 package org.lastmilehealth.collect.android.tasks;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.util.Log;
 
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.services.transport.payload.ByteArrayPayload;
@@ -34,11 +35,10 @@ import org.lastmilehealth.collect.android.utilities.EncryptionUtils;
 import org.lastmilehealth.collect.android.utilities.EncryptionUtils.EncryptedFormInformation;
 import org.lastmilehealth.collect.android.utilities.FileUtils;
 
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.util.Log;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 
 /**
  * Background task for loading a form.
@@ -213,6 +213,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, SaveResult> {
 	                }
 	                values.put(InstanceColumns.JR_FORM_ID, jrformid);
 	                values.put(InstanceColumns.JR_VERSION, jrversion);
+                    values.put(InstanceColumns.APP_ID, Collect.getInstance().getAppId());
                 } finally {
                     if ( c != null ) {
                         c.close();

@@ -14,12 +14,6 @@
 
 package org.lastmilehealth.collect.android.provider;
 
-import org.lastmilehealth.collect.android.R;
-import org.lastmilehealth.collect.android.application.Collect;
-import org.lastmilehealth.collect.android.database.ODKSQLiteOpenHelper;
-import org.lastmilehealth.collect.android.provider.InstanceProviderAPI.InstanceColumns;
-import org.lastmilehealth.collect.android.utilities.MediaUtils;
-
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -31,6 +25,12 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
+
+import org.lastmilehealth.collect.android.R;
+import org.lastmilehealth.collect.android.application.Collect;
+import org.lastmilehealth.collect.android.database.ODKSQLiteOpenHelper;
+import org.lastmilehealth.collect.android.provider.InstanceProviderAPI.InstanceColumns;
+import org.lastmilehealth.collect.android.utilities.MediaUtils;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -46,7 +46,7 @@ public class InstanceProvider extends ContentProvider {
     private static final String t = "InstancesProvider";
 
     private static final String DATABASE_NAME = "instances.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
     public static final String INSTANCES_TABLE_NAME = "instances";
 
     private static HashMap<String, String> sInstancesProjectionMap;
@@ -61,8 +61,8 @@ public class InstanceProvider extends ContentProvider {
      */
     private static class DatabaseHelper extends ODKSQLiteOpenHelper {
 
-        DatabaseHelper(String databaseName) {
-            super(Collect.METADATA_PATH, databaseName, null, DATABASE_VERSION);
+        DatabaseHelper(String dir, String databaseName) {
+            super(dir, databaseName, null, DATABASE_VERSION);
         }
 
 
@@ -78,7 +78,9 @@ public class InstanceProvider extends ContentProvider {
                + InstanceColumns.JR_VERSION + " text, "
                + InstanceColumns.STATUS + " text not null, "
                + InstanceColumns.LAST_STATUS_CHANGE_DATE + " date not null, "
-               + InstanceColumns.DISPLAY_SUBTEXT + " text not null );");
+               + InstanceColumns.DISPLAY_SUBTEXT + " text not null, "
+               + InstanceColumns.APP_ID + " text,"
+               + InstanceColumns.IS_TRANSFERRED + " integer default 0 );");
         }
 
 
@@ -98,37 +100,51 @@ public class InstanceProvider extends ContentProvider {
         		db.execSQL("ALTER TABLE " + INSTANCES_TABLE_NAME + " ADD COLUMN " +
     					InstanceColumns.JR_VERSION + " text;");
         	}
+        	if (oldVersion == 3) {
+                db.execSQL("ALTER TABLE " + INSTANCES_TABLE_NAME + " ADD COLUMN " +
+                                   InstanceColumns.APP_ID + " text;");
+                db.execSQL("ALTER TABLE " + INSTANCES_TABLE_NAME + " ADD COLUMN " +
+                                   InstanceColumns.IS_TRANSFERRED + " integer DEFAULT 0 ;");
+            }
             Log.w(t, "Successfully upgraded database from version " + initialVersion + " to " + newVersion
                     + ", without destroying all the old data");
         }
     }
 
-    private DatabaseHelper mDbHelper;
+    private DatabaseHelper mDbHelperInstances;
+    private DatabaseHelper mDbHelperArchives;
 
-    private DatabaseHelper getDbHelper() {
-        // wrapper to test and reset/set the dbHelper based upon the attachment state of the device.
+
+    private boolean createDatabaseHelpers() {
         try {
             Collect.createODKDirs();
         } catch (RuntimeException e) {
-        	mDbHelper = null;
-            return null;
+            mDbHelperInstances = null;
+            mDbHelperArchives = null;
+            return false;
         }
 
-        if (mDbHelper != null) {
-        	return mDbHelper;
+        mDbHelperInstances = new DatabaseHelper(Collect.METADATA_PATH, DATABASE_NAME);
+        mDbHelperArchives = new DatabaseHelper(Collect.ARCHIVE_PATH, DATABASE_NAME);
+        return true;
+    }
+
+    private DatabaseHelper getDbHelper(Uri uri) {
+        // wrapper to test and reset/set the dbHelper based upon the attachment state of the device.
+        switch (uri.getAuthority()) {
+            case InstanceProviderAPI.AUTHORITY_ARCHIVES:
+                return mDbHelperArchives;
+
+            default:
+            case InstanceProviderAPI.AUTHORITY_INSTANCES:
+                return mDbHelperInstances;
         }
-        mDbHelper = new DatabaseHelper(DATABASE_NAME);
-        return mDbHelper;
     }
 
     @Override
     public boolean onCreate() {
         // must be at the beginning of any activity that can be called from an external intent
-        DatabaseHelper h = getDbHelper();
-        if ( h == null ) {
-        	return false;
-        }
-        return true;
+        return createDatabaseHelpers();
     }
 
 
@@ -153,7 +169,7 @@ public class InstanceProvider extends ContentProvider {
         }
 
         // Get the database and run the query
-        SQLiteDatabase db = getDbHelper().getReadableDatabase();
+        SQLiteDatabase db = getDbHelper(uri).getReadableDatabase();
         Cursor c = qb.query(db, projection, selection, selectionArgs, null, null, sortOrder);
 
         // Tell the cursor what uri to watch, so it knows when its source data changes
@@ -208,7 +224,7 @@ public class InstanceProvider extends ContentProvider {
             values.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_INCOMPLETE);
         }
 
-        SQLiteDatabase db = getDbHelper().getWritableDatabase();
+        SQLiteDatabase db = getDbHelper(uri).getWritableDatabase();
         long rowId = db.insert(INSTANCES_TABLE_NAME, null, values);
         if (rowId > 0) {
             Uri instanceUri = ContentUris.withAppendedId(InstanceColumns.CONTENT_URI, rowId);
@@ -272,7 +288,7 @@ public class InstanceProvider extends ContentProvider {
      */
     @Override
     public int delete(Uri uri, String where, String[] whereArgs) {
-        SQLiteDatabase db = getDbHelper().getWritableDatabase();
+        SQLiteDatabase db = getDbHelper(uri).getWritableDatabase();
         int count;
 
         switch (sUriMatcher.match(uri)) {
@@ -336,7 +352,7 @@ public class InstanceProvider extends ContentProvider {
 
     @Override
     public int update(Uri uri, ContentValues values, String where, String[] whereArgs) {
-        SQLiteDatabase db = getDbHelper().getWritableDatabase();
+        SQLiteDatabase db = getDbHelper(uri).getWritableDatabase();
 
         Long now = Long.valueOf(System.currentTimeMillis());
 
@@ -390,8 +406,11 @@ public class InstanceProvider extends ContentProvider {
 
     static {
         sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-        sUriMatcher.addURI(InstanceProviderAPI.AUTHORITY, "instances", INSTANCES);
-        sUriMatcher.addURI(InstanceProviderAPI.AUTHORITY, "instances/#", INSTANCE_ID);
+        sUriMatcher.addURI(InstanceProviderAPI.AUTHORITY_INSTANCES, "instances", INSTANCES);
+        sUriMatcher.addURI(InstanceProviderAPI.AUTHORITY_INSTANCES, "instances/#", INSTANCE_ID);
+        sUriMatcher.addURI(InstanceProviderAPI.AUTHORITY_ARCHIVES, "instances", INSTANCES);
+        sUriMatcher.addURI(InstanceProviderAPI.AUTHORITY_ARCHIVES, "instances/#", INSTANCE_ID);
+
 
         sInstancesProjectionMap = new HashMap<String, String>();
         sInstancesProjectionMap.put(InstanceColumns._ID, InstanceColumns._ID);
@@ -404,6 +423,8 @@ public class InstanceProvider extends ContentProvider {
         sInstancesProjectionMap.put(InstanceColumns.STATUS, InstanceColumns.STATUS);
         sInstancesProjectionMap.put(InstanceColumns.LAST_STATUS_CHANGE_DATE, InstanceColumns.LAST_STATUS_CHANGE_DATE);
         sInstancesProjectionMap.put(InstanceColumns.DISPLAY_SUBTEXT, InstanceColumns.DISPLAY_SUBTEXT);
+        sInstancesProjectionMap.put(InstanceColumns.APP_ID, InstanceColumns.APP_ID);
+        sInstancesProjectionMap.put(InstanceColumns.IS_TRANSFERRED, InstanceColumns.IS_TRANSFERRED);
     }
 
 }

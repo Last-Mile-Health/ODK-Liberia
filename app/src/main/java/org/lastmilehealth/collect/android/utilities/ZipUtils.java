@@ -147,10 +147,32 @@ public final class ZipUtils {
         org.apache.commons.io.FileUtils.copyFile(new File(Collect.INSTANCES_DB_PATH), new File(Collect.INSTANCES_DB_TMP_PATH));
 
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFileName));
-        addInstancesToZip(dirObj, out);
+        addInstancesToZip(dirObj, out, Collect.INSTANCES_PATH);
 
         //delete db file
         org.apache.commons.io.FileUtils.deleteQuietly(new File(Collect.INSTANCES_DB_TMP_PATH));
+
+        out.close();
+    }
+
+    public static void zipArchive(String zipFileName) throws Exception {
+        //delete previous zip
+        org.apache.commons.io.FileUtils.deleteQuietly(new File(zipFileName));
+
+        File dirObj = new File(Collect.ARCHIVE_PATH);
+        if(dirObj.isDirectory()) {
+            if(dirObj.list().length == 0)
+                throw new Exception("No archive files");
+        }
+
+        //copy db file to archive it too
+//        org.apache.commons.io.FileUtils.copyFile(new File(Collect.INSTANCES_DB_PATH), new File(Collect.INSTANCES_DB_TMP_PATH));
+
+        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zipFileName));
+        addInstancesToZip(dirObj, out, Collect.ARCHIVE_PATH);
+
+        //delete db file
+        //org.apache.commons.io.FileUtils.deleteQuietly(new File(Collect.INSTANCES_DB_TMP_PATH));
 
         out.close();
     }
@@ -181,18 +203,18 @@ public final class ZipUtils {
         out.close();
     }
 
-    private static void addInstancesToZip(File dirObj, ZipOutputStream out) throws IOException {
+    private static void addInstancesToZip(File dirObj, ZipOutputStream out, String instanceDirPath) throws IOException {
         File[] files = dirObj.listFiles();
         byte[] tmpBuf = new byte[1024];
 
         for (int i = 0; i < files.length; i++) {
             if (files[i].isDirectory()) {
-                addInstancesToZip(files[i], out);
+                addInstancesToZip(files[i], out, instanceDirPath);
                 continue;
             }
             FileInputStream in = new FileInputStream(files[i].getAbsolutePath());
-            Log.d("~",  "Zipping instances: " + files[i].getAbsolutePath().substring(Collect.INSTANCES_PATH.length()+1));
-            out.putNextEntry(new ZipEntry(files[i].getAbsolutePath().substring(Collect.INSTANCES_PATH.length()+1)));
+            Log.d("~",  "Zipping instances: " + files[i].getAbsolutePath().substring(instanceDirPath.length()+1));
+            out.putNextEntry(new ZipEntry(files[i].getAbsolutePath().substring(instanceDirPath.length()+1)));
             int len;
             while ((len = in.read(tmpBuf)) > 0) {
                 out.write(tmpBuf, 0, len);

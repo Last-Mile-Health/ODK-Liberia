@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 
 public class DefaultFunctionParser implements FunctionParser {
     private static final String REGEX_FUNCTION = "^([A-Z]+)\\((.*)\\)$";
-    private static final String REGEX_VARIABLE = "^[A-Za-z0-9\\\\/]+$";
+    private static final String REGEX_VARIABLE = "^[A-Za-z0-9\\\\/\\-_]+$";
     private final FunctionFactory functionFactory;
     private final RoundingFunctionEvaluator functionEvaluator = new RoundingFunctionEvaluator();
     private final Collection<InstanceElement> instances = new ArrayList<>();

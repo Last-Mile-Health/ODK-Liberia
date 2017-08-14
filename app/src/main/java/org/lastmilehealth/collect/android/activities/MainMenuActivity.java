@@ -14,6 +14,7 @@
 
 package org.lastmilehealth.collect.android.activities;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -47,6 +48,8 @@ import android.widget.Toast;
 
 import org.lastmilehealth.collect.android.R;
 import org.lastmilehealth.collect.android.application.Collect;
+import org.lastmilehealth.collect.android.archive.ArchiveManager;
+import org.lastmilehealth.collect.android.listeners.OnEventListener;
 import org.lastmilehealth.collect.android.manager.Manager;
 import org.lastmilehealth.collect.android.parser.TinyDB;
 import org.lastmilehealth.collect.android.parser.XMLParser;
@@ -85,6 +88,8 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
     private static final int REQUEST_ENABLE_BT_INSTANCES = 4;
     private static final int REQUEST_CONNECT_DEVICE_FORMS = 5;
     private static final int REQUEST_CONNECT_DEVICE_INSTANCES = 6;
+    private static final int REQUEST_CONNECT_DEVICE_ARCHIVES = 7;
+    private static final int REQUEST_ENABLE_BT_ARCHIVES = 8;
 
     // menu options
     private static final int MENU_PREFERENCES = Menu.FIRST;
@@ -92,6 +97,7 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
     private static final int MENU_APP_UPDATE = Menu.FIRST + 2;
     private static final int SEND_FORMS = Menu.FIRST + 3;
     private static final int SEND_INSTANCES = Menu.FIRST + 4;
+    private static final int SEND_ARCHIVE = Menu.FIRST + 5;
 
     // local Bluetooth adapter and service
     private BluetoothAdapter mBluetoothAdapter = null;
@@ -113,9 +119,30 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
     private final int LOADER_INSTANCES_ID = 2;
     private int mInstanceCount = 0;
     private int mFormsCount = 0;
+    private int mArchiveCount = 0;
 
     private static boolean EXIT = true;
     private Button mSummaryButton;
+    private OnEventListener onArchiveManagerEvent = new OnEventListener() {
+        @Override
+        public void onEvent(int eventId) {
+            switch (eventId) {
+                case ArchiveManager.Event.COPIED_INSTANCES_TO_ARCHIVES:
+                    // TODO continue instances sending.
+                    break;
+
+                case ArchiveManager.Event.DELETED_OLD_ARCHIVES:
+                    Manager.getArchiveManager().invalidate();
+                    Manager.getArchiveManager().load();
+                    break;
+
+                case ArchiveManager.Event.LOADED_ARCHIVES_COUNT:
+                    mArchiveCount = Manager.getArchiveManager().getArchivesCount();
+                    invalidateOptionsMenu();
+                    break;
+            }
+        }
+    };
 
     @Override
     public android.content.Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
@@ -275,6 +302,8 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
         lm.initLoader(LOADER_INSTANCES_ID, null, mCallbacks);
 
         Manager.getRetentionManager().findAndDeleteOldForms();
+        Manager.getArchiveManager().registerEventListener(onArchiveManagerEvent);
+        Manager.getArchiveManager().checkForOutdatedArchives();
     }
 
     private void onFillForm(){
@@ -332,6 +361,7 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
         super.onActivityResult(requestCode, resultCode, data);
 
         com.github.snowdream.android.util.Log.d(MainMenuActivity.class.getName(), "[onActivityResult] requestCode : " + requestCode);
+        boolean isArchives = true;
 
         switch (requestCode) {
             case REQUEST_MAKE_DISCOVERABLE:
@@ -350,9 +380,12 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
                 }
                 break;
             case REQUEST_ENABLE_BT_INSTANCES:
+                isArchives = false;
+
+            case REQUEST_ENABLE_BT_ARCHIVES:
                 if(resultCode == Activity.RESULT_OK) {
                     Intent listIntent = new Intent(getApplicationContext(), DeviceListActivity.class);
-                    startActivityForResult(listIntent, REQUEST_CONNECT_DEVICE_INSTANCES);
+                    startActivityForResult(listIntent, isArchives ? REQUEST_CONNECT_DEVICE_ARCHIVES : REQUEST_CONNECT_DEVICE_INSTANCES);
                 } else {
                     Toast.makeText(MainMenuActivity.this, getString(R.string.no_bt_enabled), Toast.LENGTH_LONG).show();
                 }
@@ -369,12 +402,15 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
 
                     // Get the BluetoothDevice object
                     BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
-                    start_connect(device, true);
+                    start_connect(device, TRANSFER_TYPE_FORMS);
                 } else {
                     Toast.makeText(MainMenuActivity.this, getString(R.string.no_device_selected), Toast.LENGTH_LONG).show();
                 }
                 break;
             case REQUEST_CONNECT_DEVICE_INSTANCES:
+                isArchives = false;
+
+            case REQUEST_CONNECT_DEVICE_ARCHIVES:
                 if(resultCode == Activity.RESULT_OK) {
                     String name = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_NAME);
                     String address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
@@ -386,11 +422,12 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
 
                     // Get the BluetoothDevice object
                     BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
-                    start_connect(device, false);
+                    start_connect(device, isArchives ? TRANSFER_TYPE_ARCHIVE : TRANSFER_TYPE_INSTANCES);
                 } else {
                     Toast.makeText(MainMenuActivity.this, getString(R.string.no_device_selected), Toast.LENGTH_LONG).show();
                 }
                 break;
+
         }
     }
 
@@ -401,17 +438,33 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
         mBluetoothService.startAccept();
     }
 
-    private void start_connect(BluetoothDevice device, boolean isForms) {
+    public static final int TRANSFER_TYPE_FORMS = 0;
+    public static final int TRANSFER_TYPE_INSTANCES = 1;
+    public static final int TRANSFER_TYPE_ARCHIVE = 2;
 
+    private void start_connect(BluetoothDevice device, int type) {
+        boolean isForms = type == TRANSFER_TYPE_FORMS;
         com.github.snowdream.android.util.Log.d(MainMenuActivity.class.getName(), "[start_connect] device : " + device.getName());
 
         if(mBluetoothService == null)
             mBluetoothService = new BluetoothService(mHandler, this);
 
-        if(isForms)
-            prepareForms();
-        else
-            prepareInstances();
+        switch (type) {
+            case TRANSFER_TYPE_ARCHIVE:
+                prepareArchive();
+                break;
+
+            case TRANSFER_TYPE_FORMS:
+                prepareForms();
+                break;
+
+            case TRANSFER_TYPE_INSTANCES:
+                prepareInstances();
+                Manager.getArchiveManager().copyInstancesToArchives();
+                Manager.getArchiveManager().invalidate();
+                Manager.getArchiveManager().load();
+                break;
+        }
 
         if(new File(Collect.ZIP_PATH).exists())
             mBluetoothService.connect(device, isForms);
@@ -441,6 +494,7 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
         super.onDestroy();
         unregisterReceiver(BluetoothStateChangedReceiver);
         mHandler.removeCallbacksAndMessages(null);
+        Manager.getArchiveManager().unregisterEventListener(onArchiveManagerEvent);
     }
 
     @Override
@@ -448,6 +502,9 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
         super.onResume();
         invalidateOptionsMenu();
         Manager.getCaseManager().reset();
+        if (!Manager.getArchiveManager().isLoaded()) {
+            Manager.getArchiveManager().load();
+        }
     }
 
     @Override
@@ -470,6 +527,9 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
                 MenuItem.SHOW_AS_ACTION_NEVER);
         CompatibilityUtils.setShowAsAction(
                 menu.add(0, SEND_INSTANCES, 0, getString(R.string.send_completed_forms) + " (" + mInstanceCount + ")"),
+                MenuItem.SHOW_AS_ACTION_NEVER);
+        CompatibilityUtils.setShowAsAction(
+                menu.add(0, SEND_ARCHIVE, 0, getString(R.string.send_archived_instances) + " (" + mArchiveCount + ")"),
                 MenuItem.SHOW_AS_ACTION_NEVER);
         return true;
     }
@@ -542,6 +602,26 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
                     }
                 } else {
                     Toast.makeText(MainMenuActivity.this, getString(R.string.no_instances), Toast.LENGTH_SHORT).show();
+                }
+                return true;
+
+            case SEND_ARCHIVE:
+                if(mArchiveCount>0) {
+                    if (mBluetoothAdapter == null) {
+                        Toast.makeText(MainMenuActivity.this, getString(R.string.no_bt_available), Toast.LENGTH_LONG).show();
+                    } else if (!mBluetoothAdapter.isEnabled()) {
+                        Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                        startActivityForResult(enableIntent, REQUEST_ENABLE_BT_ARCHIVES);
+                    } else {
+                        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                        notificationManager.cancelAll();
+
+                        if (mBluetoothService != null) mBluetoothService.stop();
+                        Intent listIntent = new Intent(getApplicationContext(), DeviceListActivity.class);
+                        startActivityForResult(listIntent, REQUEST_CONNECT_DEVICE_ARCHIVES);
+                    }
+                } else {
+                    Toast.makeText(MainMenuActivity.this, getString(R.string.no_archived_instances), Toast.LENGTH_SHORT).show();
                 }
                 return true;
         }
@@ -641,6 +721,7 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
         return null;
     }
 
+    @SuppressLint("StringFormatInvalid")
     private void updateButtons() {
         if(mInstanceCount > 0) {
             mReviewDataButton.setText(getString(R.string.review_data_button, mInstanceCount));
@@ -730,6 +811,14 @@ public class MainMenuActivity extends Activity implements LoaderManager.LoaderCa
     private void prepareInstances() {
         try {
             ZipUtils.zipInstances(Collect.ZIP_PATH);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void prepareArchive() {
+        try {
+            ZipUtils.zipArchive(Collect.ZIP_PATH);
         } catch (Exception e) {
             e.printStackTrace();
         }

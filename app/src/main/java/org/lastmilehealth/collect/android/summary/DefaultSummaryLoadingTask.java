@@ -2,6 +2,7 @@ package org.lastmilehealth.collect.android.summary;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 
 import org.lastmilehealth.collect.android.application.Collect;
 import org.lastmilehealth.collect.android.cases.impl.BaseLoadingTask;
@@ -37,24 +38,10 @@ public class DefaultSummaryLoadingTask extends BaseLoadingTask {
             if (summaries != null) {
                 Collection<InstanceElement> elements = new ArrayList<>();
                 final Context context = Collect.getInstance();
-                Cursor cursor = FormsUtils.getInstancesCursor(context, null);
-                XmlInstanceParser instanceParser;
-                for (boolean hasElement = cursor.moveToFirst(); hasElement; hasElement = cursor.moveToNext()) {
 
-                    if (canceled) {
-                        onEvent(SummaryManager.Event.FAILED);
-                        return;
-                    }
-                    try {
-                        String instancePath = cursor.getString(cursor.getColumnIndex(InstanceProviderAPI.InstanceColumns.INSTANCE_FILE_PATH));
+                readInstances(context, InstanceProviderAPI.InstanceColumns.CONTENT_URI, elements);
+                readInstances(context, InstanceProviderAPI.InstanceColumns.CONTENT_URI_ARCHIVES, elements);
 
-                        instanceParser = new XmlInstanceParser(instancePath);
-                        InstanceElement element = instanceParser.parse();
-                        elements.add(element);
-                    } catch (Exception e) {
-                        // Continue to next instance.
-                    }
-                }
                 Manager.getSummaryManager().dispose();
                 Manager.getSummaryManager().getSummaries().addAll(summaries);
                 Manager.getSummaryManager().getInstances().addAll(elements);
@@ -69,6 +56,32 @@ public class DefaultSummaryLoadingTask extends BaseLoadingTask {
             onEvent(SummaryManager.Event.FAILED);
         }
 
+    }
+
+    private void readInstances(Context context,
+                               Uri databaseUri,
+                               Collection<InstanceElement> output) {
+        Cursor cursor = FormsUtils.getInstanceCursor(context, databaseUri, true);
+        XmlInstanceParser instanceParser;
+        for (boolean hasElement = cursor.moveToFirst(); hasElement; hasElement = cursor.moveToNext()) {
+
+            if (canceled) {
+                onEvent(SummaryManager.Event.FAILED);
+                return;
+            }
+            try {
+                String instancePath = cursor.getString(cursor.getColumnIndex(InstanceProviderAPI.InstanceColumns.INSTANCE_FILE_PATH));
+                if (InstanceProviderAPI.InstanceColumns.CONTENT_URI_ARCHIVES.equals(databaseUri)) {
+                    instancePath = instancePath.replace(Collect.INSTANCES_PATH, Collect.ARCHIVE_PATH);
+                }
+                instanceParser = new XmlInstanceParser(instancePath);
+                InstanceElement element = instanceParser.parse();
+                output.add(element);
+            } catch (Exception e) {
+                toString();
+                // Continue to next instance.
+            }
+        }
     }
 
     private void onEvent(final int event) {

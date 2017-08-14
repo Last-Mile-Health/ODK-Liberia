@@ -20,12 +20,7 @@ class DefaultSecondaryFormMaps extends HashMap<String, Collection<InstanceElemen
     public void putByName(InstanceElement element) {
         String name = element.getAttributes().get(FormsUtils.ATTR_FORM_NAME);
         if (!TextUtils.isEmpty(name)) {
-            Collection<InstanceElement> elements = get(name);
-            if (elements == null) {
-                elements = new HashSet<>();
-                put(name, elements);
-            }
-            elements.add(element);
+            put(name, element);
         }
     }
 
@@ -33,13 +28,19 @@ class DefaultSecondaryFormMaps extends HashMap<String, Collection<InstanceElemen
     public void putByUUID(InstanceElement element) {
         String uuid = FormsUtils.getVariableValue(FormsUtils.CASE_UUID, element);
         if (!TextUtils.isEmpty(uuid)) {
-            Collection<InstanceElement> elements = get(uuid);
-            if (elements == null) {
-                elements = new HashSet<>();
-                put(uuid, elements);
-            }
-            elements.add(element);
+            put(uuid, element);
         }
+    }
+
+    @Override
+    public void put(String key,
+                    InstanceElement element) {
+        Collection<InstanceElement> elements = get(key);
+        if (elements == null) {
+            elements = new HashSet<>();
+            put(key, elements);
+        }
+        elements.add(element);
     }
 
     @Override

@@ -2,12 +2,14 @@ package org.lastmilehealth.collect.android.utilities;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.text.TextUtils;
 
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.StringData;
 import org.javarosa.core.model.instance.TreeElement;
+import org.lastmilehealth.collect.android.application.Collect;
 import org.lastmilehealth.collect.android.logic.FormController;
 import org.lastmilehealth.collect.android.parser.InstanceElement;
 import org.lastmilehealth.collect.android.provider.FormsProviderAPI;
@@ -28,7 +30,9 @@ public class FormsUtils {
     public static final String CASE_STATUS = "data/caseStatus";
     public static final String CASE_STATUS_CLOSED = "closed";
     public static final String ATTR_FORM_NAME = "name";
-    public static String[] DATE_FORMATS = {"yyyy-MM-dd'T'HH:mm:ss.S", "yyyy-MM-dd"};
+    //    public static final String CASE_FILTER_VARIABLE = "/data/autoDate";
+    public static final String CASE_FILTER_VARIABLE = "/data/LMD-VAL-meta_dataEntry_endTime";
+    public static final String[] DATE_FORMATS = {"yyyy-MM-dd'T'HH:mm:ss.S", "yyyy-MM-dd"};
 
     public static IAnswerData getVariableValue(String variableName,
                                                FormDef formDef) {
@@ -148,6 +152,21 @@ public class FormsUtils {
             selectionArgs = new String[]{InstanceProviderAPI.STATUS_SUBMITTED, formName};
         }
         return context.getContentResolver().query(InstanceProviderAPI.InstanceColumns.CONTENT_URI, null, selection, selectionArgs, null);
+    }
+
+    public static Cursor getInstanceCursor(Context context,
+                                           Uri databaseUri,
+                                           boolean isLocal) {
+        String selection;
+        String[] selectionArgs;
+        if (!isLocal) {
+            selection = InstanceProviderAPI.InstanceColumns.STATUS + " != ?";
+            selectionArgs = new String[]{InstanceProviderAPI.STATUS_SUBMITTED};
+        } else {
+            selection = InstanceProviderAPI.InstanceColumns.STATUS + " != ? AND " + InstanceProviderAPI.InstanceColumns.APP_ID + " = ? AND " + InstanceProviderAPI.InstanceColumns.IS_TRANSFERRED + " = ?";
+            selectionArgs = new String[]{InstanceProviderAPI.STATUS_SUBMITTED, Collect.getInstance().getAppId(), "0"};
+        }
+        return context.getContentResolver().query(databaseUri, null, selection, selectionArgs, null);
     }
 
     public static String getFormFilePath(Cursor instanceCursor,

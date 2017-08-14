@@ -1,5 +1,7 @@
 package org.lastmilehealth.collect.android.manager;
 
+import org.lastmilehealth.collect.android.archive.ArchiveManager;
+import org.lastmilehealth.collect.android.archive.ArchiveManagerImpl;
 import org.lastmilehealth.collect.android.cases.CaseManager;
 import org.lastmilehealth.collect.android.cases.impl.CaseManagerImpl;
 import org.lastmilehealth.collect.android.retention.RetentionTimeManager;
@@ -17,7 +19,7 @@ public class Manager extends EventHandlerImpl implements EventHandler {
     private static final CaseManager CASE_MANAGER = new CaseManagerImpl();
     private static final RetentionTimeManager RETENTION_MANAGER = new RetentionTimeManagerImpl();
     private static final SummaryManager SUMMARY_MANAGER = new DefaultSummaryManager();
-
+    private static final ArchiveManager ARCHIVE_MANAGER = new ArchiveManagerImpl();
 
     protected Manager() {
     }
@@ -32,6 +34,10 @@ public class Manager extends EventHandlerImpl implements EventHandler {
 
     public static SummaryManager getSummaryManager() {
         return SUMMARY_MANAGER;
+    }
+
+    public static ArchiveManager getArchiveManager() {
+        return ARCHIVE_MANAGER;
     }
 
 }

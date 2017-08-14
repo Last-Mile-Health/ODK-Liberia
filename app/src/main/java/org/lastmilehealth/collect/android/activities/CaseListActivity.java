@@ -20,7 +20,8 @@ import org.lastmilehealth.collect.android.cases.Case;
 import org.lastmilehealth.collect.android.cases.CaseCollection;
 import org.lastmilehealth.collect.android.cases.CaseType;
 import org.lastmilehealth.collect.android.dialog.CaseFilterDialog;
-import org.lastmilehealth.collect.android.filter.CaseFilter;
+import org.lastmilehealth.collect.android.dialog.FilterDialog;
+import org.lastmilehealth.collect.android.filter.Filter;
 import org.lastmilehealth.collect.android.listeners.OnEventListener;
 import org.lastmilehealth.collect.android.manager.Manager;
 import org.lastmilehealth.collect.android.utilities.CompatibilityUtils;
@@ -35,14 +36,16 @@ import java.util.List;
 public class CaseListActivity extends ListActivity {
     public static final String EXTRA_CASE_TYPE_ID = "CaseTypeId";
     public static final int MENU_FILTER_ID = 10001;
-    private View progressBar, progressLayout;
+    private View progressBar, progressLayout, noItemsLabel;
     private TextView progressText;
     private CasesAdapter adapter;
     private CaseType caseType;
     private AlertDialog mAlertDialog;
     private Menu menu;
     private CaseFilterDialog dialog;
-    private boolean filterSelected = false;
+    private boolean isFilterSelected = false;
+    private Filter<Case> filterSelected = null;
+    private Filter<Case> sortSelected = null;
     private OnEventListener onCaseTypeEvent = new OnEventListener() {
         @Override
         public void onEvent(int eventId) {
@@ -59,25 +62,35 @@ public class CaseListActivity extends ListActivity {
                     hideProgress();
                     adapter.update();
                     checkForDoubleCasesNames();
+                    checkIfAdapterIsEmppy();
                     break;
             }
         }
     };
-    private CaseFilterDialog.OnFilterClicked onFilterClicked = new CaseFilterDialog.OnFilterClicked() {
+    private FilterDialog.OnFilterClicked<Case> onFilterClicked = new FilterDialog.OnFilterClicked<Case>() {
         @Override
-        public void onFilterSelected(CaseFilter filter) {
-            if (filter != null) {
-                adapter.applyFilter(filter);
-                setFilterDisableIcon();
-                filterSelected = true;
-            }
+        public void onFilterSelected(Filter<Case> filter) {
+            adapter.applyFilter(filter);
+            filterSelected = filter;
+            isFilterSelected = filter != null;
+            checkIfAdapterIsEmppy();
         }
 
         @Override
-        public void onSortMethodSelected(CaseFilter sortMethod) {
-            if (sortMethod != null) {
-                adapter.applySortingMethod(sortMethod);
-            }
+        public void onSortMethodSelected(Filter<Case> sortMethod) {
+            adapter.applySortingMethod(sortMethod);
+            sortSelected = sortMethod;
+            checkIfAdapterIsEmppy();
+        }
+
+        @Override
+        public void clearAll() {
+            filterSelected = null;
+            isFilterSelected = false;
+            sortSelected = null;
+            adapter.applyFilter(null);
+            adapter.applySortingMethod(null);
+            checkIfAdapterIsEmppy();
         }
     };
 
@@ -89,10 +102,17 @@ public class CaseListActivity extends ListActivity {
         progressLayout = findViewById(R.id.progress_layout);
         progressBar = findViewById(R.id.progress_bar);
         progressText = (TextView) findViewById(R.id.progress_text);
+        noItemsLabel = findViewById(R.id.no_cases_label);
 
 
         String caseTypeId = getIntent().getStringExtra(EXTRA_CASE_TYPE_ID);
         caseType = Manager.getCaseManager().findCaseTypeById(caseTypeId);
+        if (caseType == null) {
+            finish();
+            return;
+        }
+
+        caseType.registerEventListener(onCaseTypeEvent);
         Object lastState = getLastNonConfigurationInstance();
         if (lastState != null && lastState instanceof CasesAdapter) {
             adapter = (CasesAdapter) lastState;
@@ -100,15 +120,11 @@ public class CaseListActivity extends ListActivity {
             adapter = new CasesAdapter(caseType);
         }
 
-        filterSelected = adapter.hasFilter();
+        isFilterSelected = adapter.hasFilter();
 
         setListAdapter(adapter);
 
-        if (caseType == null) {
-            finish();
-            return;
-        }
-        caseType.registerEventListener(onCaseTypeEvent);
+        checkIfAdapterIsEmppy();
 
         setTitle(getString(R.string.app_name) + ">" + caseType.getDisplayName());
     }
@@ -135,6 +151,7 @@ public class CaseListActivity extends ListActivity {
             adapter.update();
             hideProgress();
             checkForDoubleCasesNames();
+            checkIfAdapterIsEmppy();
         } else {
             Manager.getCaseManager().loadCaseType(caseType, getApplicationContext());
         }
@@ -169,7 +186,7 @@ public class CaseListActivity extends ListActivity {
         this.menu = menu;
         CompatibilityUtils.setShowAsAction(menu.add(0, MENU_FILTER_ID, 0, R.string.general_preferences)
                                                .setIcon(R.drawable.ic_filter_select), MenuItem.SHOW_AS_ACTION_ALWAYS);
-        if (filterSelected) {
+        if (isFilterSelected) {
             setFilterDisableIcon();
         }
         return true;
@@ -179,16 +196,15 @@ public class CaseListActivity extends ListActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case MENU_FILTER_ID:
-                if (!filterSelected) {
-                    dialog = new CaseFilterDialog(this);
-                    dialog.setShowSort(true);
-                    dialog.setOnFilterClickedListener(onFilterClicked);
-                    dialog.show();
-                } else {
-                    setFilterSelectIcon();
-                    adapter.applyFilter(null);
-                    filterSelected = false;
-                }
+//                if (!isFilterSelected) {
+                dialog = new CaseFilterDialog(this, filterSelected, sortSelected);
+                dialog.setOnFilterClickedListener(onFilterClicked);
+                dialog.show();
+//                } else {
+//                    setFilterSelectIcon();
+//                    adapter.applyFilter(null);
+//                    isFilterSelected = false;
+//                }
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -197,6 +213,16 @@ public class CaseListActivity extends ListActivity {
     @Override
     public Object onRetainNonConfigurationInstance() {
         return adapter;
+    }
+
+    private void checkIfAdapterIsEmppy() {
+        if (adapter == null || adapter.getCount() == 0) {
+            noItemsLabel.setVisibility(View.VISIBLE);
+            getListView().setVisibility(View.GONE);
+        } else {
+            noItemsLabel.setVisibility(View.GONE);
+            getListView().setVisibility(View.VISIBLE);
+        }
     }
 
     private void setFilterSelectIcon() {
@@ -212,6 +238,10 @@ public class CaseListActivity extends ListActivity {
             CaseCollection collection = caseType.getCases();
             List<String> caseNames = new ArrayList<>();
             for (Case instance : collection.values()) {
+                if (instance.isClosed()) {
+                    continue;
+                }
+
                 String name = instance.getPrimaryVariableValue();
                 // TODO is this comparison case sensitive?
                 if (caseNames.contains(name)) {

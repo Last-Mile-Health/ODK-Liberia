@@ -39,32 +39,43 @@ public class XmlSummaryParser {
 
 
     public SummaryCollection parse() throws Exception {
-        XmlPullParser parser = XmlParserUtils.getXMLFile(Collect.SUMMARY_PATH, Collect.SUMMARY_BAD_PATH);
+        XmlParserUtils.XmlPullParserHolder parserHolder = null;
+        try {
+            parserHolder = XmlParserUtils.getXMLFile(Collect.SUMMARY_PATH, Collect.SUMMARY_BAD_PATH);
+            XmlPullParser parser = parserHolder.parser;
 
-        summariesCollection = new BasicSummaryCollection();
+            summariesCollection = new BasicSummaryCollection();
 
-        while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
+            while (parser.getEventType() != XmlPullParser.END_DOCUMENT) {
 
-            switch (parser.getEventType()) {
+                switch (parser.getEventType()) {
 
-                case XmlPullParser.START_TAG:
-                    handleStartTag(parser);
-                    break;
+                    case XmlPullParser.START_TAG:
+                        handleStartTag(parser);
+                        break;
 
-                case XmlPullParser.END_TAG:
-                    handleEndTag(parser);
-                    break;
+                    case XmlPullParser.END_TAG:
+                        handleEndTag(parser);
+                        break;
 
-                case XmlPullParser.TEXT:
-                    text = parser.getText();
+                    case XmlPullParser.TEXT:
+                        text = parser.getText();
 
-                default:
-                    break;
+                    default:
+                        break;
+                }
+
+
+                parser.next();
             }
-
-
-            parser.next();
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (parserHolder != null) {
+                parserHolder.dispose();
+            }
         }
+
 
         return summariesCollection;
     }

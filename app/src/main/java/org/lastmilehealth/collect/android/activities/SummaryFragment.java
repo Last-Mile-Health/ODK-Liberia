@@ -11,11 +11,12 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import org.lastmilehealth.collect.android.R;
-import org.lastmilehealth.collect.android.dialog.InstanceFilterDialog;
+import org.lastmilehealth.collect.android.dialog.FilterDialog;
+import org.lastmilehealth.collect.android.dialog.SummaryFilterDialog;
+import org.lastmilehealth.collect.android.filter.Filter;
 import org.lastmilehealth.collect.android.listeners.OnEventListener;
 import org.lastmilehealth.collect.android.manager.Manager;
 import org.lastmilehealth.collect.android.parser.InstanceElement;
-import org.lastmilehealth.collect.android.summary.InstanceFilter;
 import org.lastmilehealth.collect.android.summary.SummaryCollection;
 import org.lastmilehealth.collect.android.summary.SummaryManager;
 import org.lastmilehealth.collect.android.utilities.CompatibilityUtils;
@@ -32,15 +33,25 @@ public class SummaryFragment extends Fragment {
     private View progressBar;
     private ViewGroup container;
     private boolean viewAdded = false;
-    private InstanceFilterDialog dialog;
+    private SummaryFilterDialog dialog;
     private Menu menu;
-    private InstanceFilter filter;
+    private Filter<InstanceElement> filterSelected;
 
-    private InstanceFilterDialog.OnFilterClicked onFilterClicked = new InstanceFilterDialog.OnFilterClicked() {
+    private FilterDialog.OnFilterClicked<InstanceElement> onFilterClicked = new FilterDialog.OnFilterClicked<InstanceElement>() {
         @Override
-        public void onFilterSelected(InstanceFilter filterSelected) {
-            filter = filterSelected;
-            getActivity().invalidateOptionsMenu();
+        public void onFilterSelected(Filter<InstanceElement> filter) {
+            filterSelected = filter;
+            recreateViews();
+        }
+
+        @Override
+        public void onSortMethodSelected(Filter<InstanceElement> sortMethod) {
+            // No sorting in summary.
+        }
+
+        @Override
+        public void clearAll() {
+            filterSelected = null;
             recreateViews();
         }
     };
@@ -97,15 +108,15 @@ public class SummaryFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case MENU_FILTER_ID:
-                if (filter == null) {
-                    dialog = new InstanceFilterDialog(getActivity());
-                    dialog.setOnFilterClickedListener(onFilterClicked);
-                    dialog.show();
-                } else {
-                    getActivity().invalidateOptionsMenu();
-                    filter = null;
-                    recreateViews();
-                }
+//                if (filterSelected == null) {
+                dialog = new SummaryFilterDialog(getActivity(), filterSelected);
+                dialog.setOnFilterClickedListener(onFilterClicked);
+                dialog.show();
+//                } else {
+//                    getActivity().invalidateOptionsMenu();
+//                    filterSelected = null;
+//                    recreateViews();
+//                }
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -147,11 +158,11 @@ public class SummaryFragment extends Fragment {
 
     private int getFilterIcon() {
         int icon;
-        if (filter == null) {
-            icon = R.drawable.ic_filter_select;
-        } else {
-            icon = R.drawable.ic_filter_disable;
-        }
+//        if (filterSelected == null) {
+        icon = R.drawable.ic_filter_select;
+//        } else {
+//            icon = R.drawable.ic_filter_disable;
+//        }
         return icon;
     }
 
@@ -169,8 +180,8 @@ public class SummaryFragment extends Fragment {
         if (!viewAdded) {
             SummaryCollection summaries = Manager.getSummaryManager().getSummaries();
             Collection<InstanceElement> instances = Manager.getSummaryManager().getInstances();
-            if (filter != null) {
-                instances = filter.filter(instances);
+            if (filterSelected != null) {
+                instances = filterSelected.filter(instances);
             }
             View view = summaries.createView(container, instances);
             if (view != null) {

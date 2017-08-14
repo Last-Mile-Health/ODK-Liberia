@@ -23,13 +23,13 @@ import static org.lastmilehealth.collect.android.cases.CaseType.Event.CASE_DETAI
 public class CaseTypeImpl extends EventHandlerImpl implements CaseType {
     private final UUID caseTypeId = UUID.randomUUID();
     private final CaseCollection cases = new CaseCollectionImpl();
+    private final SecondaryFormsMap secondaryForms = new DefaultSecondaryFormMaps();
     private String displayName;
     private String primaryFormVariable;
     private String primaryFormName;
     private Collection<String> secondaryFormNames;
     private int casesState = Event.CASES_NOT_LOADED;
     private CaseElement caseElement;
-    private final SecondaryFormsMap secondaryForms = new DefaultSecondaryFormMaps();
 
 
     public CaseTypeImpl() {}
@@ -86,13 +86,13 @@ public class CaseTypeImpl extends EventHandlerImpl implements CaseType {
         return secondaryFormNames;
     }
 
+    public void setSecondaryFormNames(Collection<String> secondaryFormNames) {
+        this.secondaryFormNames = secondaryFormNames;
+    }
+
     @Override
     public SecondaryFormsMap getSecondaryForms() {
         return secondaryForms;
-    }
-
-    public void setSecondaryFormNames(Collection<String> secondaryFormNames) {
-        this.secondaryFormNames = secondaryFormNames;
     }
 
     @Override
@@ -102,6 +102,14 @@ public class CaseTypeImpl extends EventHandlerImpl implements CaseType {
             caseInstance.dispose();
         }
         cases.clear();
+    }
+
+    @Override
+    public void resetInstances() {
+        for (Case instance : cases.values()) {
+            instance.getSecondaryForms().clear();
+        }
+        secondaryForms.clear();
     }
 
     @Override
@@ -151,6 +159,11 @@ public class CaseTypeImpl extends EventHandlerImpl implements CaseType {
     @Override
     public void setCaseElement(CaseElement caseElement) {
         this.caseElement = caseElement;
+    }
+
+    @Override
+    public Case findCaseByUUID(String uuid) {
+        return cases.get(uuid);
     }
 
     public void setPrimaryFormVariable(String primaryFormVariable) {

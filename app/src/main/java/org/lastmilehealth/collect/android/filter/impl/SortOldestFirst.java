@@ -1,10 +1,7 @@
 package org.lastmilehealth.collect.android.filter.impl;
 
-import android.text.TextUtils;
-
-import org.lastmilehealth.collect.android.cases.Case;
-import org.lastmilehealth.collect.android.filter.CaseFilter;
-import org.lastmilehealth.collect.android.manager.Manager;
+import org.lastmilehealth.collect.android.filter.Filter;
+import org.lastmilehealth.collect.android.filter.FilterTransformer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,13 +14,15 @@ import java.util.List;
  * Created by Anton Donchev on 18.05.2017.
  */
 
-public class SortOldestFirst implements CaseFilter {
-    private final Comparator<Case> comparatorOldestFirst = new Comparator<Case>() {
+public class SortOldestFirst<TYPE> implements Filter<TYPE> {
+    private final FilterTransformer<TYPE, Date> objToDateTransformer;
+    private final Comparator<TYPE> comparatorOldestFirst = new Comparator<TYPE>() {
         @Override
-        public int compare(Case lhs,
-                           Case rhs) {
-            Date lhsDate = lhs.getLastModifiedDate();
-            Date rhsDate = rhs.getLastModifiedDate();
+        public int compare(TYPE lhs,
+                           TYPE rhs) {
+            Date lhsDate = objToDateTransformer.transform(lhs);
+            Date rhsDate = objToDateTransformer.transform(rhs);
+
             if (lhsDate == null) {
                 if (rhsDate == null) {
                     return 0;
@@ -40,15 +39,20 @@ public class SortOldestFirst implements CaseFilter {
         }
     };
 
+    public SortOldestFirst(FilterTransformer<TYPE, Date> objToDateTransformer) {
+        this.objToDateTransformer = objToDateTransformer;
+    }
+
     @Override
-    public List<Case> filter(Collection<Case> cases) {
-        List<Case> sorted = new ArrayList<>(cases);
+    public List<TYPE> filter(Collection<TYPE> cases) {
+        List<TYPE> sorted = new ArrayList<>(cases);
         Collections.sort(sorted, comparatorOldestFirst);
         return sorted;
     }
 
-    public static boolean isEnabled() {
-        return !TextUtils.isEmpty(Manager.getRetentionManager().getVariableName());
+    @Override
+    public boolean isEnabled() {
+        return FilterPeriod.isPeriodFilteringEnabled();
     }
 
 }

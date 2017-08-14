@@ -62,6 +62,11 @@ public class RetentionTimeManagerImpl extends EventHandlerImpl implements Retent
     }
 
     @Override
+    public long getExpirationTimeMillies() {
+        return getExpirationTime() * 86400000L ;
+    }
+
+    @Override
     public String getDetaulfVariableName() {
         return DEFAULT_RETENTION_VARIABLE_NAME;
     }

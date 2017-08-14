@@ -58,9 +58,13 @@ public interface CaseType extends EventHandler {
 
     CaseElement getCaseElement();
 
+    Case findCaseByUUID(String uuid);
+
     void setCaseElement(CaseElement caseElement);
 
     void reset();
+
+    void resetInstances();
 
     Collection<InstanceElement> getCaseSecondaryForms(Case caseInstance);
 

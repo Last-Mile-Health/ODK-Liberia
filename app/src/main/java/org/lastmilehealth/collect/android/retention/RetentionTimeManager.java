@@ -16,6 +16,8 @@ public interface RetentionTimeManager extends EventHandler {
 
     int getExpirationTime();
 
+    long getExpirationTimeMillies();
+
     String getDetaulfVariableName();
 
     int getDefaultExpirationTime();

@@ -12,6 +12,17 @@
         android:visibility="gone"
         />
 
+    <TextView
+        android:id="@+id/no_cases_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:gravity="center"
+        android:text="@string/no_cases_to_display"
+        android:textSize="18sp"
+        android:visibility="gone"
+        />
+
     <LinearLayout
         android:id="@+id/progress_layout"
         android:layout_width="match_parent"

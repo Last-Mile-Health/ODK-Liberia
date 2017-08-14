@@ -8,6 +8,8 @@ import org.lastmilehealth.collect.android.manager.Manager;
 import org.lastmilehealth.collect.android.parser.InstanceElement;
 import org.lastmilehealth.collect.android.utilities.FormsUtils;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -24,6 +26,7 @@ public class CaseImpl implements Case {
     private int status = Status.NOT_LOADED;
     private String uuid;
     private Date lastModifiedDate;
+    private final Collection<InstanceElement> secondaryForms = new ArrayList<>();
 
     @Override
     public String getCaseUUID() {
@@ -93,7 +96,33 @@ public class CaseImpl implements Case {
 
     @Override
     public boolean isClosed() {
+        if (primaryForm == null) {
+            return true;
+        } else if (isClosed(primaryForm)) {
+            return true;
+        } else if (isSecondaryFormsClosed()) {
+            return true;
+        }
         return false;
+    }
+
+    private boolean isClosed(InstanceElement element) {
+        String caseStatus = FormsUtils.getVariableValue(FormsUtils.CASE_STATUS, element);
+        return (FormsUtils.CASE_STATUS_CLOSED.equalsIgnoreCase(caseStatus));
+    }
+
+    private boolean isSecondaryFormsClosed() {
+        for (InstanceElement form : secondaryForms) {
+            if (isClosed(form)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Collection<InstanceElement> getSecondaryForms() {
+        return secondaryForms;
     }
 
     @Override

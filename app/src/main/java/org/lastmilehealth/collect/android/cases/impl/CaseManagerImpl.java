@@ -9,7 +9,7 @@ import org.lastmilehealth.collect.android.cases.CaseManager;
 import org.lastmilehealth.collect.android.cases.CaseManagerLoadingTask;
 import org.lastmilehealth.collect.android.cases.CaseType;
 import org.lastmilehealth.collect.android.cases.LoadingTask;
-import org.lastmilehealth.collect.android.manager.Manager;
+import org.lastmilehealth.collect.android.manager.EventHandlerImpl;
 import org.lastmilehealth.collect.android.parser.XmlInstanceParser;
 
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ import java.util.List;
  * Created by Anton Donchev on 09.05.2017.
  */
 
-public class CaseManagerImpl extends Manager implements CaseManager {
+public class CaseManagerImpl extends EventHandlerImpl implements CaseManager {
     private int state = State.INITIALIZED;
     private List<CaseType> cases;
     private CaseManagerLoadingTask task;
@@ -126,6 +126,8 @@ public class CaseManagerImpl extends Manager implements CaseManager {
             for (CaseType caseType : cases) {
                 caseType.reset();
             }
+            cases.clear();
+            cases = null;
         }
         if (task != null) {
             task.cancel();
@@ -136,6 +138,8 @@ public class CaseManagerImpl extends Manager implements CaseManager {
         }
         executedTasks.clear();
         XmlInstanceParser.resetCache();
+        state = State.INITIALIZED;
+
     }
 
 

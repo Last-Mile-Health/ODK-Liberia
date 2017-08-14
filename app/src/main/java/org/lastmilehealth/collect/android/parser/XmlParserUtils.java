@@ -7,6 +7,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 
 /**
@@ -18,7 +19,7 @@ public class XmlParserUtils {
     /**
      * This method returns an xml parser fed by the first existing file found from the path send as parameters.
      */
-    public static XmlPullParser getXMLFile(String... filenames) throws XmlPullParserException, FileNotFoundException {
+    public static XmlPullParserHolder getXMLFile(String... filenames) throws XmlPullParserException, FileNotFoundException {
         if (filenames != null) {
             for (String filename : filenames) {
                 // get a reference to the file.
@@ -34,7 +35,7 @@ public class XmlParserUtils {
 
                     // set the input for the parser using an InputStreamReader
                     xpp.setInput(new InputStreamReader(fis));
-                    return xpp;
+                    return new XmlPullParserHolder(xpp, fis);
                 }
                 // If the file was not found than continue to iterate until all paths are checked
             }
@@ -42,6 +43,25 @@ public class XmlParserUtils {
 
         // If there is no file found then throw an exception
         throw new FileNotFoundException("No XML file was found to load");
+    }
+
+    public static final class XmlPullParserHolder {
+        public final XmlPullParser parser;
+        public final InputStream stream;
+
+        public XmlPullParserHolder(XmlPullParser parser,
+                                   InputStream stream) {
+            this.parser = parser;
+            this.stream = stream;
+        }
+
+        public void dispose() {
+            try {
+                stream.close();
+            } catch (Exception e) {
+                // nothing
+            }
+        }
     }
 
 }

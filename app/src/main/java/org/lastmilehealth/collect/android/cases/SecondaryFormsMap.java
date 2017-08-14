@@ -15,5 +15,7 @@ public interface SecondaryFormsMap extends Map<String, Collection<InstanceElemen
 
     void putByUUID(InstanceElement element);
 
+    void put(String key, InstanceElement element);
+
     void dispose();
 }

@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.text.TextUtils;
 
 import org.lastmilehealth.collect.android.application.Collect;
+import org.lastmilehealth.collect.android.cases.Case;
 import org.lastmilehealth.collect.android.cases.CaseType;
 import org.lastmilehealth.collect.android.parser.InstanceElement;
 import org.lastmilehealth.collect.android.parser.XmlInstanceParser;
@@ -26,41 +27,75 @@ public class DefaultCaseDetailsLoadingTask extends BaseLoadingTask {
 
     @Override
     public void run() {
+        Cursor instanceCursor = null, archivesCursor = null;
         try {
             sendEvent(CaseType.Event.CASE_DETAILS_LOADING);
-            XmlInstanceParser parser;
-            caseType.getSecondaryForms().clear();
-            final Context context = Collect.getInstance();
-            Cursor cursor = FormsUtils.getInstancesCursor(context, null);
-            for (boolean hasElement = cursor.moveToFirst(); hasElement; hasElement = cursor.moveToNext()) {
-                if (canceled) {
-                    sendEvent(CaseType.Event.CASE_DETAILS_FAILED);
-                    caseType.getSecondaryForms().clear();
-                    return;
-                }
-                try {
-                    String instancePath = cursor.getString(cursor.getColumnIndex(InstanceProviderAPI.InstanceColumns.INSTANCE_FILE_PATH));
 
-                    parser = new XmlInstanceParser(instancePath);
-                    InstanceElement element = parser.parse();
-                    String instanceName;
-                    if (!TextUtils.isEmpty(instanceName = element.getAttributes().get(FormsUtils.ATTR_FORM_NAME))) {
-                        for (String secondaryFormName : caseType.getSecondaryFormNames()) {
-                            if (instanceName.equalsIgnoreCase(secondaryFormName)) {
-                                caseType.getSecondaryForms().putByUUID(element);
-                                break;
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    // Continue to next instance.
-                }
+            caseType.resetInstances();
+            final Context context = Collect.getInstance();
+
+            instanceCursor = FormsUtils.getInstanceCursor(context, InstanceProviderAPI.InstanceColumns.CONTENT_URI, true);
+            archivesCursor = FormsUtils.getInstanceCursor(context, InstanceProviderAPI.InstanceColumns.CONTENT_URI_ARCHIVES, true);
+
+            if (!processCursor(instanceCursor) || !processCursor(archivesCursor, true)) {
+                sendEvent(CaseType.Event.CASE_DETAILS_FAILED);
+                caseType.getSecondaryForms().clear();
+                return;
             }
+
             sendEvent(CaseType.Event.CASE_DETAILS_LOADED);
         } catch (Exception e) {
             // Failed to load forms
             sendEvent(CaseType.Event.CASE_DETAILS_FAILED);
+        } finally {
+            if (instanceCursor != null) {
+                instanceCursor.close();
+            }
+            if (archivesCursor != null) {
+                archivesCursor.close();
+            }
         }
+    }
+
+    private boolean processCursor(Cursor cursor) {
+        return processCursor(cursor, false);
+    }
+
+    private boolean processCursor(Cursor cursor,
+                                  boolean isArchives) {
+        for (boolean hasElement = cursor.moveToFirst(); hasElement; hasElement = cursor.moveToNext()) {
+            if (canceled) {
+                return false;
+            }
+            try {
+                String instancePath = cursor.getString(cursor.getColumnIndex(InstanceProviderAPI.InstanceColumns.INSTANCE_FILE_PATH));
+                if (isArchives) {
+                    instancePath = instancePath.replace(Collect.INSTANCES_PATH, Collect.ARCHIVE_PATH);
+                }
+                XmlInstanceParser parser;
+                parser = new XmlInstanceParser(instancePath);
+                InstanceElement element = parser.parse();
+                String instanceName;
+
+                if (!TextUtils.isEmpty(instanceName = element.getAttributes().get(FormsUtils.ATTR_FORM_NAME))) {
+                    for (String secondaryFormName : caseType.getSecondaryFormNames()) {
+                        if (instanceName.equalsIgnoreCase(secondaryFormName)) {
+                            String uuid = FormsUtils.getVariableValue(FormsUtils.CASE_UUID, element);
+                            if (!TextUtils.isEmpty(uuid)) {
+                                caseType.getSecondaryForms().put(uuid, element);
+                                Case instance = caseType.findCaseByUUID(uuid);
+                                instance.getSecondaryForms().add(element);
+                            }
+
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Continue to next instance.
+            }
+        }
+        return true;
     }
 
     private void sendEvent(final int event) {

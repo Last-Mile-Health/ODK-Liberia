@@ -33,6 +33,7 @@
     <string name="no_discoverable">Device is not discoverable</string>
     <string name="send_update">Send Update</string>
     <string name="send_completed_forms">Send Completed Forms</string>
+    <string name="send_archived_instances">Dump Archive</string>
     <string name="already_ready">Already ready for update</string>
     <string name="data_transfer_title">Data transferring</string>
     <string name="data_transfer_button">Cancel</string>
@@ -44,5 +45,6 @@
     <string name="data_transfer_failed">Could not transfer data. Please try again.</string>
     <string name="no_forms">No forms to send</string>
     <string name="no_instances">No instances to send</string>
+    <string name="no_archived_instances">No archived instances to send</string>
     <string name="summary_statistics_screen_title">Summary Statistics</string>
 </resources>

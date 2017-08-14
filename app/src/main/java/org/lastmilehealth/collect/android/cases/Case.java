@@ -2,6 +2,7 @@ package org.lastmilehealth.collect.android.cases;
 
 import org.lastmilehealth.collect.android.parser.InstanceElement;
 
+import java.util.Collection;
 import java.util.Date;
 
 /**
@@ -45,6 +46,8 @@ public interface Case {
      * This method loads all reference instances connected to that case.
      */
     void loadReferences();
+
+    Collection<InstanceElement> getSecondaryForms();
 
     void dispose();
 

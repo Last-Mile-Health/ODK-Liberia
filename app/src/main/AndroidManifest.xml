@@ -28,6 +28,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <!-- Needed for original odk screens like settings, instance creation etc. -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
@@ -71,6 +72,11 @@
             android:name="org.lastmilehealth.collect.android.provider.InstanceProvider"
             android:authorities="org.lastmilehealth.collect.android.provider.odk.instances"
             android:exported="true"/>
+
+        <provider
+            android:name="org.lastmilehealth.collect.android.provider.ArchivesProvider"
+            android:authorities="org.lastmilehealth.collect.android.provider.odk.archives"
+            android:exported="false"/>
 
         <activity
             android:name="org.lastmilehealth.collect.android.activities.MainMenuActivity"

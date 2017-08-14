@@ -22,6 +22,8 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
+import android.text.TextUtils;
 
 import org.lastmilehealth.collect.android.R;
 import org.lastmilehealth.collect.android.database.ActivityLogger;
@@ -38,6 +40,9 @@ import org.opendatakit.httpclientandroidlib.protocol.BasicHttpContext;
 import org.opendatakit.httpclientandroidlib.protocol.HttpContext;
 
 import java.io.File;
+import java.util.UUID;
+
+import static org.lastmilehealth.collect.android.R.xml.preferences;
 
 /**
  * Extends the Application class to implement
@@ -50,6 +55,7 @@ public class Collect extends Application {
     public static final String ODK_ROOT = Environment.getExternalStorageDirectory() + File.separator + "odk";
     public static final String FORMS_PATH = ODK_ROOT + File.separator + "forms";
     public static final String INSTANCES_PATH = ODK_ROOT + File.separator + "instances";
+    public static final String ARCHIVE_PATH = ODK_ROOT + File.separator + "archive";
     public static final String CACHE_PATH = ODK_ROOT + File.separator + ".cache";
     public static final String METADATA_PATH = ODK_ROOT + File.separator + "metadata";
     public static final String TMPFILE_PATH = CACHE_PATH + File.separator + "tmp.jpg";
@@ -59,9 +65,9 @@ public class Collect extends Application {
     public static final String ROLES_PATH = ODK_ROOT + File.separator + "ROLES.xml";
     public static final String ROLES_BAD_PATH = ODK_ROOT + File.separator + "forms" + File.separator + "ROLES.xml.bad";
     public static final String CASES_PATH = FORMS_PATH + File.separator + "ODKL_cases.xml";
-    public static final String CASES_BAD_PATH = FORMS_PATH + File.separator + "ODKL_cases.bad";
+    public static final String CASES_BAD_PATH = FORMS_PATH + File.separator + "ODKL_cases.xml.bad";
     public static final String SUMMARY_PATH = FORMS_PATH + File.separator + "ODKL_summaries.xml";
-    public static final String SUMMARY_BAD_PATH = FORMS_PATH + File.separator + "ODKL_summaries.bad";
+    public static final String SUMMARY_BAD_PATH = FORMS_PATH + File.separator + "ODKL_summaries.xml.bad";
 
     public static final String ZIP_PATH = ODK_ROOT + File.separator + "data.zip";
     public static final String FORMS_FLAG_PATH = FORMS_PATH + File.separator + "forms.txt";
@@ -70,11 +76,15 @@ public class Collect extends Application {
     public static final String INSTANCES_DB_TMP_PATH = INSTANCES_PATH + File.separator + "instances.db";
     public static final String TMP_PATH = ODK_ROOT + File.separator + "tmp";
 
+    public static final String KEY_APP_ID = "LocalAppId";
+
     public static final String DEFAULT_FONTSIZE = "21";
 
     public static final Handler MAIN_THREAD_HANDLER = new Handler(Looper.getMainLooper());
 
     public static final int DEFAULT_RETENTION_TIME_EXPIRATION_TIME = 180; // days
+
+    private String appId;
 
     // share all session cookies across all sessions...
     private CookieStore cookieStore = new BasicCookieStore();
@@ -148,7 +158,7 @@ public class Collect extends Application {
         }
 
         String[] dirs = {
-                ODK_ROOT, FORMS_PATH, INSTANCES_PATH, CACHE_PATH, METADATA_PATH
+                ODK_ROOT, FORMS_PATH, INSTANCES_PATH, CACHE_PATH, METADATA_PATH, ARCHIVE_PATH
         };
 
         for (String dirName : dirs) {
@@ -220,7 +230,7 @@ public class Collect extends Application {
     public CookieStore getCookieStore() {
         return cookieStore;
     }
-    
+
     @Override
     public void onCreate() {
         singleton = this;
@@ -238,15 +248,31 @@ public class Collect extends Application {
         // log.enableInfo(false);
         // log.enableDebug(false);
 
-        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+        PreferenceManager.setDefaultValues(this, preferences, false);
         super.onCreate();
 
         PropertyManager mgr = new PropertyManager(this);
 
         FormController.initializeJavaRosa(mgr);
-        
+
         mActivityLogger = new ActivityLogger(
                 mgr.getSingularProperty(PropertyManager.DEVICE_ID_PROPERTY));
+    }
+
+    public synchronized String getAppId() {
+        if (TextUtils.isEmpty(appId)) {
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+            appId = preferences.getString(KEY_APP_ID, null);
+            if (TextUtils.isEmpty(appId)) {
+                appId = generateAppId();
+                preferences.edit().putString(KEY_APP_ID, appId).apply();
+            }
+        }
+        return appId;
+    }
+
+    private String generateAppId() {
+        return Settings.Secure.ANDROID_ID + "." + UUID.randomUUID().toString();
     }
 
 }
